@@ -64,6 +64,14 @@ $SUDO_EXEC sed -e "s:/home/pkang/sdk/sdx65:$target_sdk_dir:g" -i $env_setup_scri
 # create link for sysroots-uninative directory with sudo rights
 $SUDO_EXEC ln -s $target_sdk_dir/$NATIVE_LIB_LINK_NAME $NATIVE_LIB_INSTALL_DIR/$NATIVE_LIB_LINK_NAME >/dev/null 2>&1
 
+unzip -o "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0/cc1.zip" -d "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0"
+
+unzip -o "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0/cc1plus.zip" -d "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0"
+
+unzip -o "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0/lto1.zip" -d "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0"
+
+unzip -o "sysroots/armv7vet2hf-neon-oe-linux-gnueabi/usr/lib/libprotoc.zip" -d "sysroots/armv7vet2hf-neon-oe-linux-gnueabi/usr/lib"
+
 echo "done"
 
 echo "SDK has been successfully set up and is ready to be used."

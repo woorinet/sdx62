@@ -3,7 +3,7 @@
   
   ```
   sudo apt-get install git cmake build-essential python
-  git clone https://gitlab.com/wooriNet/sdx65.git
+  git clone https://github.com/wooriNet/sdx62.git
   cd sdx65
   ```
 

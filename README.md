@@ -4,7 +4,7 @@
   ```
   sudo apt-get install git cmake build-essential python
   git clone https://github.com/wooriNet/sdx62.git
-  cd sdx65
+  cd sdx62
   ```
 
 **#Setup SDK**  

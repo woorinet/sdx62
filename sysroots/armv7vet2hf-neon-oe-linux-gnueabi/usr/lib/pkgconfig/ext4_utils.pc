@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: ext4_utils
+Description: ext4_utils library and make_extfs utility
+Version: 1.0.0
+Libs: -L${libdir} -lext4_utils
+Cflags: -I${includedir}/ext4_utils

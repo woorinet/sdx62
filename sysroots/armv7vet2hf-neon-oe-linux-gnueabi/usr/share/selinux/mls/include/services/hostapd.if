@@ -1,0 +1,39 @@
+## <summary>IEEE 802.11 wireless LAN Host AP daemon.</summary>
+
+
+interface(`hostapd_manage_services',`
+    ifdef(`init_systemd', `
+        gen_require(`
+            type hostapd_unit_t;
+            type hostapd_cli_qcmap_unit_t;
+            class service { start stop status };
+        ')
+
+        allow $1 { hostapd_unit_t hostapd_cli_qcmap_unit_t }:service { start stop status };
+    ')
+    # This interface does nothing for sysvinit
+')
+
+
+interface(`hostapd_use_sockets',`
+    gen_require(`
+        type var_run_t;
+        type hostapd_t;
+        type hostapd_var_run_t;
+    ')
+
+    allow $1 hostapd_t:unix_dgram_socket sendto;
+    allow hostapd_t $1:unix_dgram_socket sendto;
+    rw_sock_files_pattern($1, var_run_t, hostapd_var_run_t)
+')
+
+interface(`hostapd_read_status',`
+    gen_require(`
+        type proc_t;
+        type hostapd_t;
+    ')
+
+    read_lnk_files_pattern($1, proc_t, hostapd_t)
+    read_files_pattern($1, proc_t, hostapd_t)
+')
+

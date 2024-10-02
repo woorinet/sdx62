@@ -1,0 +1,93 @@
+(/.*)?	system_u:object_r:data_t:s0
+/adb.conf	--	system_u:object_r:adb_data_conf_t:s0
+/SVA(/.*)?	system_u:object_r:alexa_data_t:s0
+/usb(/.*)?	system_u:object_r:port_bridge_data_usb_t:s0
+/www(/.*)?	system_u:object_r:httpd_data_t:s0
+/qwes(/.*)?	system_u:object_r:qwes_data_t:s0
+/time(/.*)?	system_u:object_r:time_data_t:s0
+/alexa.uim	system_u:object_r:alexa_data_t:s0
+/audio(/.*)?	system_u:object_r:audio_data_file_t:s0
+/embms(/.*)?	system_u:object_r:msdc_data_t:s0
+/mbimd(/.*)?	system_u:object_r:mbim_data_t:s0
+/alerts.db	system_u:object_r:alexa_data_t:s0
+/dnsmasq.leases	system_u:object_r:wifi_data_t:s0
+/hostapd[0-9]?\.log	--	system_u:object_r:wifi_data_t:s0
+/AVSAudio.conf	system_u:object_r:alexa_data_t:s0
+/coredump(/.*)?	system_u:object_r:coredump_data_t:s0
+/fs_scrub(/.*)?	system_u:object_r:fs_scrub_data_t:s0
+/misc/ipa(/.*)?	system_u:object_r:ipacm_data_t:s0
+/misc/qvr(/.*)?	system_u:object_r:qvr_data_t:s0
+/misc/sxr(/.*)?	system_u:object_r:sxr_data_t:s0
+/misc/wifi(/.*)?	system_u:object_r:wifi_data_t:s0
+/qwes_test(/.*)?	system_u:object_r:qwes_data_t:s0
+/allplay\.db*	--	system_u:object_r:allplay_data_t:s0
+/settingsca.db	system_u:object_r:alexa_data_t:s0
+/data_qcmap(/.*)?	system_u:object_r:qcmap_data_t:s0
+/data_sprhd(/.*)?	system_u:object_r:sprhd_data_t:s0
+/qmuxbridge(/.*)?	system_u:object_r:qmuxbridge_data_t:s0
+/tombstones(/.*)?	system_u:object_r:tombstone_data_t:s0
+/vendor/ipq(/.*)?	system_u:object_r:wifi_data_t:s0
+/dhcpcd-wlan(.*)?	system_u:object_r:wifi_data_t:s0
+/ota_package(/.*)?	system_u:object_r:data_otapackage_t:s0
+/persist/rfs(/.*)?	system_u:object_r:rfs_persist_t:s0
+/vendor/qdma(/.*)?	system_u:object_r:vendor_qdma_data_t:s0
+/vendor/wifi(/.*)?	system_u:object_r:wifi_data_t:s0
+/msc_internal(/.*)?	system_u:object_r:msdc_data_t:s0
+/vendor/radio(/.*)?	system_u:object_r:vendor_radio_vendor_data_file_t:s0
+/notifications.db	system_u:object_r:alexa_data_t:s0
+/service_config.txt	--	system_u:object_r:mcm_ril_data_t:s0
+/misc/bluetooth(/.*)?	--	system_u:object_r:bt_data_t:s0
+/certifiedsender.db	system_u:object_r:alexa_data_t:s0
+/debug_transport.conf	--	system_u:object_r:adb_data_conf_t:s0
+/persist/sensors(/.*)?	system_u:object_r:sensors_persist_data_t:s0
+/vendor/location(/.*)?	system_u:object_r:loc_data_t:s0
+/misc/port_bridge(/.*)?	system_u:object_r:port_bridge_data_t:s0
+/persist/hlos_rfs(/.*)?	system_u:object_r:rfs_persist_t:s0
+/vendor/qdmastats(/.*)?	system_u:object_r:vendor_qdmastatsd_data_t:s0
+/vendor/tzstorage(/.*)?	system_u:object_r:qseecomd_data_t:s0
+/AlexaClientConfig.json	--	system_u:object_r:voice-ui-app_data_t:s0
+/persist/chg_policy(/.*)?	system_u:object_r:chg-policy-persist_data_t:s0
+/persist/rfs/shared(/.*)?	system_u:object_r:firmware_persist_t:s0
+/voice-ui-framework(/.*)?	system_u:object_r:voice-ui-app_data_t:s0
+/vendor/modem_config(/.*)?	system_u:object_r:vendor_mbn_data_file_t:s0
+/AlexaClientSDKConfig.json	--	system_u:object_r:voice-ui-app_data_t:s0
+/persist/rfs/mdm/adsp(/.*)?	system_u:object_r:adsp_persist_t:s0
+/persist/rfs/mdm/mpss(/.*)?	system_u:object_r:mpss_persist_t:s0
+/persist/rfs/msm/adsp(/.*)?	system_u:object_r:adsp_persist_t:s0
+/persist/rfs/msm/mpss(/.*)?	system_u:object_r:mpss_persist_t:s0
+/data/vendor/tombstones(/.*)?	system_u:object_r:tombstone_rfs_data_t:s0
+/vendor/location-partner(/.*)?	system_u:object_r:loc_data_t:s0
+/med_system_alerts_melodic_01._TTH_.mp3	system_u:object_r:alexa_data_t:s0
+/med_system_alerts_melodic_02._TTH_.mp3	system_u:object_r:alexa_data_t:s0
+/med_system_alerts_melodic_01_short._TTH_.wav	system_u:object_r:alexa_data_t:s0
+/med_system_alerts_melodic_02_short._TTH_.wav	system_u:object_r:alexa_data_t:s0
+/adk\.led\.db	--	system_u:object_r:led_manager_data_t:s0
+/spotify\.db	--	system_u:object_r:spotify_data_t:s0
+/openssl\.cnf	--	system_u:object_r:httpd_data_t:s0
+/adk\.rules\.db	--	system_u:object_r:rules_manager_data_t:s0
+/entropy_file	--	system_u:object_r:qcmap_data_t:s0
+/adk\.button\.db	--	system_u:object_r:button_manager_data_t:s0
+/adk\.device\.db	--	system_u:object_r:system_manager_data_t:s0
+/entropy_file1	--	system_u:object_r:qcmap_data_t:s0
+/lighttpd\.conf	--	system_u:object_r:httpd_data_t:s0
+/reboot-cookie	system_u:object_r:reboot_cookie_data_t:s0
+/adk\.voiceui\.db	--	system_u:object_r:voice-ui-app_data_t:s0
+/mdm9625\.com\.crt	--	system_u:object_r:httpd_data_t:s0
+/mdm9625\.com\.key	--	system_u:object_r:httpd_data_t:s0
+/mdm9625\.com\.pem	--	system_u:object_r:httpd_data_t:s0
+/miscDatabase\.db	--	system_u:object_r:voice-ui-app_data_t:s0
+/cblAuthDelegate\.db	--	system_u:object_r:voice-ui-app_data_t:s0
+/wpa_supplicant\.log	--	system_u:object_r:wifi_data_t:s0
+/adk\.audiomanager\.db	--	system_u:object_r:audio_manager_data_t:s0
+/nopwd\.mdm9625\.com\.key	--	system_u:object_r:httpd_data_t:s0
+/sta_mode_hostapd\.conf	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.bt\.db	--	system_u:object_r:connectivity_manager_data_t:s0
+/wpa_supplicant\.conf\.tmp	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.coex\.db	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.wifi\.db	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.states\.db	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.zigbee\.db	--	system_u:object_r:connectivity_manager_data_t:s0
+/wpa_supplicant_home_ap\.conf	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.bt\.db-journal	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.wifi\.db-journal	--	system_u:object_r:connectivity_manager_data_t:s0
+/adk\.connectivity\.states\.db-journal	--	system_u:object_r:connectivity_manager_data_t:s0

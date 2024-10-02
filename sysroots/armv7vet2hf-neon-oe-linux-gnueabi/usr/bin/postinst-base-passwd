@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# Install passwd.master and group.master to sysconfdir
+install -d -m 755 /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/etc
+for i in passwd group; do
+	install -p -m 644 /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/share/base-passwd/$i.master 		/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/etc/$i
+done
+
+# Run any useradd postinsts
+for script in /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/bin/postinst-useradd-*; do
+	if [ -f $script ]; then
+		$script
+	fi
+done
+

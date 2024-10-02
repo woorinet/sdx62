@@ -1,0 +1,1536 @@
+<summary>
+        Policies shared across all targets.
+</summary>
+<module name="adbd" filename="policy/modules/device/adbd.if">
+<summary>
+ADB daemon interface
+</summary>
+<interface name="adb_read_data_files" lineno="44">
+<summary>
+Read ADB data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="adb_manage_data_files" lineno="62">
+<summary>
+Manage ADB data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="adk_message_monitor" filename="policy/modules/device/adk_message_monitor.if">
+<summary>
+adk-message-monitor daemon interface
+</summary>
+</module>
+<module name="adk_message_send" filename="policy/modules/device/adk_message_send.if">
+<summary>
+adk-message-send daemon interface
+</summary>
+</module>
+<module name="adkcfg" filename="policy/modules/device/adkcfg.if">
+<summary>
+adkcfg daemon interface
+</summary>
+</module>
+<module name="adsprpcd" filename="policy/modules/device/adsprpcd.if">
+<summary>ADSPRPCD</summary>
+<interface name="adsprpcd_files_access" lineno="41">
+<summary>
+adsprpcd file access
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="alexa" filename="policy/modules/device/alexa.if">
+<summary>
+alexa daemon interface
+</summary>
+<interface name="files_read_alexa_data_files" lineno="45">
+<summary>
+Read Alexa data files
+</summary>
+<desc>
+Read alexa_data_t file
+</desc>
+<param name="domain">
+<summary>
+Domain allowed access
+</summary>
+</param>
+</interface>
+<interface name="alexa_manage_avs_fifo" lineno="55">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+</module>
+<module name="alljoyn" filename="policy/modules/device/alljoyn.if">
+<summary>
+alljoyn daemon interface
+</summary>
+</module>
+<module name="allplay" filename="policy/modules/device/allplay.if">
+<summary>
+allplay daemon interface
+</summary>
+</module>
+<module name="alm" filename="policy/modules/device/alm.if">
+<summary>ALM Interface</summary>
+<interface name="alm_write_sock_file" lineno="41">
+<summary>
+Communicate with alm service socket file
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="alogd" filename="policy/modules/device/alogd.if">
+<summary>android_compat log daemon</summary>
+<interface name="alog_manage_log" lineno="40">
+<summary>
+Manage alog logs
+</summary>
+<param name="domain">
+<summary>
+Domain type allowed access
+</summary>
+</param>
+</interface>
+</module>
+<module name="atfwd" filename="policy/modules/device/atfwd.if">
+<summary>atfwd daemon</summary>
+</module>
+<module name="audio_manager" filename="policy/modules/device/audio_manager.if">
+<summary>
+audio_manager daemon interface
+</summary>
+<interface name="adk_audio_manager_dbus_chat" lineno="34">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+</module>
+<module name="bootlogd" filename="policy/modules/device/bootlogd.if">
+<summary>bootlogd daemon</summary>
+</module>
+<module name="btdaemon" filename="policy/modules/device/btdaemon.if">
+<summary>
+btdaemon interface
+</summary>
+</module>
+<module name="button_manager" filename="policy/modules/device/button_manager.if">
+<summary>
+button_manager daemon interface
+</summary>
+</module>
+<module name="cache" filename="policy/modules/device/cache.if">
+<summary>cache directory</summary>
+</module>
+<module name="chg-policy" filename="policy/modules/device/chg-policy.if">
+<summary>chg-policy daemon</summary>
+</module>
+<module name="connectivity_manager" filename="policy/modules/device/connectivity_manager.if">
+<summary>
+connectivity_manager daemon interface
+</summary>
+<interface name="adk_dbus_send_connectivity_manager" lineno="45">
+<summary>
+Send messages to connectivity_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="adk_connectivity_manager_dbus_chat" lineno="67">
+<summary>
+Send and receive messages from
+connectivity_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="csd_server" filename="policy/modules/device/csd_server.if">
+<summary>csd server</summary>
+</module>
+<module name="data" filename="policy/modules/device/data.if">
+<summary>data mount</summary>
+<interface name="user_data_files_type" lineno="40">
+<summary>
+Declare type as a user data file
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="search_user_data_dir" lineno="59">
+<summary>
+Search user data directory
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="read_user_data_files" lineno="84">
+<summary>
+Read user data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed to read
+</summary>
+</param>
+</interface>
+<interface name="data_filetrans" lineno="119">
+<summary>
+Create data files in custom context
+</summary>
+<param name="domain">
+<summary>
+Domain creating file.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type to transition to.
+</summary>
+</param>
+<param name="class">
+<summary>
+The class of file being created
+</summary>
+</param>
+<param name="type">
+<summary>
+(optional): Name of the file being created
+</summary>
+</param>
+</interface>
+<interface name="manage_user_data_files" lineno="141">
+<summary>
+Manage user data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed access.
+</summary>
+</param>
+</interface>
+<interface name="data_manage_generic_user_files" lineno="168">
+<summary>
+Manage default user data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="data_mount_user_dir" lineno="186">
+<summary>
+Mount /data directory
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="system_data_files_type" lineno="204">
+<summary>
+Declare type as a system data file
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="search_system_data_dir" lineno="223">
+<summary>
+Search system data directory
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="read_system_data_files" lineno="248">
+<summary>
+Read system data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed access.
+</summary>
+</param>
+</interface>
+<interface name="manage_system_data_files" lineno="273">
+<summary>
+Manage system data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed access.
+</summary>
+</param>
+</interface>
+<interface name="data_manage_generic_system_files" lineno="301">
+<summary>
+Manage generic system data files. Intended for usage
+by mount-copybind before the proper label is assigned.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="data_mount_volatile_bind" lineno="319">
+<summary>
+Mount /systemrw directory and perform bind mounts
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="relabel_all_data_files" lineno="339">
+<summary>
+Relabel all data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="data_rw_system_data_files" lineno="377">
+<summary>
+Read and write system data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="data_path_opt" filename="policy/modules/device/data_path_opt.if">
+<summary>
+data_path_opt daemon interface
+</summary>
+</module>
+<module name="dataadpl" filename="policy/modules/device/dataadpl.if">
+<summary>QTI Tethering Interface</summary>
+</module>
+<module name="dataqti_ppp" filename="policy/modules/device/dataqti_ppp.if">
+<summary>system directory</summary>
+</module>
+<module name="devconfig" filename="policy/modules/device/devconfig.if">
+<summary>
+device_configure init script interface
+</summary>
+</module>
+<module name="diag-router" filename="policy/modules/device/diag-router.if">
+<summary>diag-router daemon</summary>
+</module>
+<module name="diag" filename="policy/modules/device/diag.if">
+<summary>diag daemon</summary>
+<interface name="diag_domtrans" lineno="39">
+<summary>
+Launch diag daemons in diag context
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="diagrebootapp" filename="policy/modules/device/diagrebootapp.if">
+<summary>diagrebootapp daemon</summary>
+</module>
+<module name="dlsc" filename="policy/modules/device/dlsc.if">
+<summary> Data Linux Statistics Agent </summary>
+</module>
+<module name="ethagent" filename="policy/modules/device/ethagent.if">
+<summary>
+ethagent daemon interface
+</summary>
+</module>
+<module name="firmware" filename="policy/modules/device/firmware.if">
+<summary> Firmware interface </summary>
+<interface name="firmware_search_dirs" lineno="41">
+<summary>
+Search through firmware directories
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="firmware_read_files" lineno="58">
+<summary>
+Read firmware files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="firmware_manage_shared_props" lineno="77">
+<summary>
+Read and write shared firmware properties
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="fs_scrub_daemon" filename="policy/modules/device/fs_scrub_daemon.if">
+<summary>fs scrub daemon</summary>
+</module>
+<module name="gpu" filename="policy/modules/device/gpu.if">
+<summary>GPU</summary>
+</module>
+<module name="iotd" filename="policy/modules/device/iotd.if">
+<summary>
+iot daemon interface
+</summary>
+</module>
+<module name="iotsys" filename="policy/modules/device/iotsys.if">
+<summary>
+iotsys daemon interface
+</summary>
+</module>
+<module name="ipacm" filename="policy/modules/device/ipacm.if">
+<summary>IPACM</summary>
+<interface name="rw_ipacm_data_config_files" lineno="41">
+<summary>
+Read and write for ipa config file in /data/misc/ipa.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="ipa_nat_table_rw_dev" lineno="49">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+<interface name="ipa_ipv6ct_table_rw_dev" lineno="58">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+</module>
+<module name="ipq_wlan" filename="policy/modules/device/ipq_wlan.if">
+<summary>IPQ WLAN Interface</summary>
+</module>
+<module name="irsc_util" filename="policy/modules/device/irsc_util.if">
+<summary>irsc_util daemon</summary>
+</module>
+<module name="led_manager" filename="policy/modules/device/led_manager.if">
+<summary>
+led_manager daemon interface
+</summary>
+<interface name="adk_dbus_send_led_manager" lineno="45">
+<summary>
+Send messages to led_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="adk_led_manager_dbus_chat" lineno="67">
+<summary>
+Send and receive messages from
+led_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="leprop" filename="policy/modules/device/leprop.if">
+<summary>
+LE properties service
+</summary>
+<interface name="leprop_read_props" lineno="44">
+<summary>
+Read properties
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="leprop_rw_props" lineno="66">
+<summary>
+Read and write properties
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="letzd" filename="policy/modules/device/letzd.if">
+<summary>
+tuiapp interface
+</summary>
+<interface name="connect_to_letzd" lineno="34">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+</module>
+<module name="location" filename="policy/modules/device/location.if">
+<summary>location daemon</summary>
+<interface name="location_read_loc_data_files" lineno="45">
+<summary>
+Read location data  files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed to read
+</summary>
+</param>
+</interface>
+<interface name="files_read_loc_etc_files" lineno="73">
+<summary>
+Read location conf files in /etc.
+</summary>
+<desc>
+<p>
+Allow the specified domain to read location conf
+files in /etc. These files are location framework
+related system configuration files
+</p>
+</desc>
+<param name="domain">
+<summary>
+Domain allowed access for location conf files.
+</summary>
+</param>
+</interface>
+</module>
+<module name="mbim" filename="policy/modules/device/mbim.if">
+<summary>system directory</summary>
+<interface name="mbim_rw_device" lineno="40">
+<summary>
+Read and write to mbim device node
+</summary>
+<param name="domain">
+<summary>
+The domain to allow access for
+</summary>
+</param>
+</interface>
+</module>
+<module name="mcm_ril_service" filename="policy/modules/device/mcm_ril_service.if">
+<summary>mcm_ril_service daemon</summary>
+</module>
+<module name="mediaplayer_cli" filename="policy/modules/device/mediaplayer_cli.if">
+<summary>
+mediaplayer cli daemon interface
+</summary>
+</module>
+<module name="mediaplayer_test" filename="policy/modules/device/mediaplayer_test.if">
+<summary>
+mediaplayer test daemon interface
+</summary>
+</module>
+<module name="msdc" filename="policy/modules/device/msdc.if">
+<summary>msdc daemon</summary>
+<interface name="msdc_data_perms" lineno="41">
+<summary>
+Permit access to files in /data
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="msdc_self_socket_perms" lineno="62">
+<summary>
+Manage socket permissions for net access
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="mss" filename="policy/modules/device/mss.if">
+<summary>mss daemon</summary>
+</module>
+<module name="mtd_tools" filename="policy/modules/device/mtd_tools.if">
+<summary>system directory</summary>
+<interface name="mtd_tools_exec" lineno="40">
+<summary>
+Execute mtd utils.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="nfdlna" filename="policy/modules/device/nfdlna.if">
+<summary>
+nfdlna daemon interface
+</summary>
+<interface name="adk_dbus_send_nfdlna" lineno="45">
+<summary>
+Send messages to nfdlna over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="adk_nfdlna_dbus_chat" lineno="67">
+<summary>
+Send and receive messages from
+rules_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="ota" filename="policy/modules/device/ota.if">
+<summary>OTA</summary>
+</module>
+<module name="overlay" filename="policy/modules/device/overlay.if">
+<summary>overlay mount</summary>
+<interface name="overlay_mount_user_dir" lineno="40">
+<summary>
+Mount /overlay directory
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="manage_overlay_data_files" lineno="63">
+<summary>
+Manage overlay data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<param name="type">
+<summary>
+File type allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="pdmappersvc" filename="policy/modules/device/pdmappersvc.if">
+<summary>pdmappersvc daemon</summary>
+</module>
+<module name="persist" filename="policy/modules/device/persist.if">
+<summary>persist mount</summary>
+<interface name="persist_mount_dir" lineno="40">
+<summary>
+Mount /persist directory
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="port_bridge" filename="policy/modules/device/port_bridge.if">
+<summary>Port Bridge Interface</summary>
+<interface name="modem_rw_modem_glink_dev" lineno="40">
+<summary>
+Read ADB data files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="qbt" filename="policy/modules/device/qbt.if">
+<summary>QC Bluetooth Userspace Interface</summary>
+</module>
+<module name="qcameradaemon" filename="policy/modules/device/qcameradaemon.if">
+<summary>qcameradaemon daemon</summary>
+</module>
+<module name="qcmap_cm" filename="policy/modules/device/qcmap_cm.if">
+<summary>system directory</summary>
+<interface name="files_rw_qcmap_etc_data_files" lineno="41">
+<summary>
+Read and write generic files in /etc.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="read_write_qcmap_cm_socket_files" lineno="60">
+<summary>
+Read and write sockets.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_cm_rw_sock_files" lineno="78">
+<summary>
+Read and write sockets.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_cm_sendto_unix_dgram_socket" lineno="98">
+<summary>
+Read and write sockets.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_manage_httpd_data_files" lineno="116">
+<summary>
+Manage lighttpd files inside /data
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_httpd_data_filetrans" lineno="144">
+<summary>
+Transition created files to lighttpd domain
+</summary>
+<param name="domain">
+<summary>
+Domain creating the file
+</summary>
+</param>
+<param name="filetype">
+<summary>
+Type of file being created
+</summary>
+</param>
+<param name="filename">
+<summary>
+(optional): String of filename to transition
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_cm_rw_unix_dgram_socket" lineno="162">
+<summary>
+Read and write sockets.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_cm_rw_unix_netlink_socket" lineno="180">
+<summary>
+Read and write sockets.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_manage_var_run_qcmap_dir" lineno="198">
+<summary>
+manage  /var/run/qcmap  dirs .
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_delete_qcmap_pid" lineno="215">
+<summary>
+Delete the dhcp client pid file.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="qcmap_cm_rw_netlink_socket_files" lineno="234">
+<summary>
+Read and write qcmap  netlink_socket .
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_cm_rw_unix_dgram_socket_files" lineno="252">
+<summary>
+Read and write qcmap unix dgarmsocket .
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_read_qcmap_etc_data_files" lineno="270">
+<summary>
+Read qcmap related files in /etc.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+<interface name="qcmap_manage_qcmap_pid" lineno="287">
+<summary>
+manage the qcmap client pid file.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="qcmap_manage_tmp_data_files" lineno="306">
+<summary>
+manage the files in /tmp/data.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="qcmap_manage_var_run_data_files" lineno="324">
+<summary>
+manage QCMAP files and directories in /var/run.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="qcmap_manage_user_data_files" lineno="344">
+<summary>
+manage QCMAP files and directories in /data/data_qcmap.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="qcrilNrd" filename="policy/modules/device/qcrilNrd.if">
+<summary>RIL daemon</summary>
+</module>
+<module name="qdma" filename="policy/modules/device/qdma.if">
+<summary>qdma</summary>
+<interface name="rw_vendor_qdma_sock_file" lineno="42">
+<summary>
+Communicate with qdma socket file
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="qdmastatsd" filename="policy/modules/device/qdmastatsd.if">
+<summary>qdmastatsd</summary>
+</module>
+<module name="qmi-shutdown-modem" filename="policy/modules/device/qmi-shutdown-modem.if">
+<summary>qmi shutdown modem daemon</summary>
+</module>
+<module name="qmi_ip_multiclient" filename="policy/modules/device/qmi_ip_multiclient.if">
+<summary>QMI IP Multiclient</summary>
+<interface name="qmi_rw_embms_dev" lineno="41">
+<summary>
+Read and write embms device node
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="qmuxbridge" filename="policy/modules/device/qmuxbridge.if">
+<summary>system directory</summary>
+</module>
+<module name="qnetmgrd" filename="policy/modules/device/qnetmgrd.if">
+<summary>QTI Network Manager</summary>
+<interface name="qnetmgr_write_data_sock_files" lineno="40">
+<summary>
+Write qti network manager data socket files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="qnetmgr_rw_netlink_sockets" lineno="58">
+<summary>
+Send and receive netlink messages from qti network manager
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="qnetmgr_use_unix_stream_sockets" lineno="76">
+<summary>
+Use qti network manager unix datagram sockets
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="qrtr_ns" filename="policy/modules/device/qrtr_ns.if">
+<summary>qrtr_ns daemon</summary>
+</module>
+<module name="qseecomd" filename="policy/modules/device/qseecomd.if">
+<summary>qseecomd daemon</summary>
+</module>
+<module name="qtether" filename="policy/modules/device/qtether.if">
+<summary>QTI Tethering Interface</summary>
+</module>
+<module name="qti-audio-server-daemon" filename="policy/modules/device/qti-audio-server-daemon.if">
+<summary> qti audio server daemon interface </summary>
+<interface name="audio_binder_call_transfer" lineno="41">
+<summary>
+Binder call and transfer support
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="qwesd" filename="policy/modules/device/qwesd.if">
+<summary>qwesd daemon</summary>
+</module>
+<module name="rebootd" filename="policy/modules/device/rebootd.if">
+<summary> Reboot daemon interface </summary>
+<interface name="reboot_write_reboot_device" lineno="40">
+<summary>
+Write to the reboot device.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="reboot_write_fifo_files_reboot_device" lineno="58">
+<summary>
+Write to the reboot named pipe device on fifo_file.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="recovery" filename="policy/modules/device/recovery.if">
+<summary>Recovery Interface</summary>
+<interface name="recovery_upgrade_rw_files" lineno="41">
+<summary>
+recovery upgrade domain process
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+<rolecap/>
+</interface>
+</module>
+<module name="rmt_storage" filename="policy/modules/device/rmt_storage.if">
+<summary>rmt_storage daemon</summary>
+</module>
+<module name="rules_manager" filename="policy/modules/device/rules_manager.if">
+<summary>
+rules_manager daemon interface
+</summary>
+<interface name="adk_dbus_send_rules_manager" lineno="45">
+<summary>
+Send messages to rules_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="adk_rules_manager_dbus_chat" lineno="67">
+<summary>
+Send and receive messages from
+rules_manager over dbus.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="servicemanager" filename="policy/modules/device/servicemanager.if">
+<summary>
+servicemanager interface
+</summary>
+<interface name="servicemanager_binder_use" lineno="44">
+<summary>
+Request binder instance from servicemanager
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="servicemanager_binder_call" lineno="71">
+<summary>
+Use binder interface
+</summary>
+<param name="client">
+<summary>
+Client allowed access.
+</summary>
+</param>
+<param name="server">
+<summary>
+Server allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="sfs_config" filename="policy/modules/device/sfs_config.if">
+<summary> sfs config </summary>
+</module>
+<module name="spotify" filename="policy/modules/device/spotify.if">
+<summary>
+spotify daemon interface
+</summary>
+</module>
+<module name="sprhd" filename="policy/modules/device/sprhd.if">
+<summary>
+Statistics Processing Engine for APPS Reported
+via Huff Encryption And Diag
+</summary>
+<interface name="sprhd_rw_netlink_sockets" lineno="43">
+<summary>
+Send and receive netlink messages from spearhead
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="sprhd_use_unix_stream_sockets" lineno="61">
+<summary>
+Use spearhead unix stream sockets
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="sprhd_manage_user_data_files" lineno="80">
+<summary>
+manage sprhd files and directories in /data/data_sprhd
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="sprhd_manage_fifo" lineno="97">
+<summary>
+Allow spearhead control over fifo files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="ss-ramdump" filename="policy/modules/device/ss-ramdump.if">
+<summary>subsystem ramdump daemon</summary>
+</module>
+<module name="ssreq-server" filename="policy/modules/device/ssreq-server.if">
+<summary>ssreq-server daemon</summary>
+</module>
+<module name="system" filename="policy/modules/device/system.if">
+<summary>system directory</summary>
+<interface name="system_read_link_files" lineno="41">
+<summary>
+Read system directory link files
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="system_manager" filename="policy/modules/device/system_manager.if">
+<summary>
+system manager daemon interface
+</summary>
+<interface name="system_manager_rw_data_files" lineno="45">
+<summary>
+Read and writesystem manager data files.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="thermal-engine" filename="policy/modules/device/thermal-engine.if">
+<summary>thermal-engine daemon</summary>
+<interface name="rw_thermal_dev" lineno="41">
+<summary>
+Read and write to thermal_device_t
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="read_thermal_config" lineno="60">
+<summary>
+Read thermal_config file
+that is located in /etc folder
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="time_daemon" filename="policy/modules/device/time_daemon.if">
+<summary>time_daemon</summary>
+</module>
+<module name="trustedinputservice" filename="policy/modules/device/trustedinputservice.if">
+<summary>
+trustedinputservice interface
+</summary>
+</module>
+<module name="tuicoreservice" filename="policy/modules/device/tuicoreservice.if">
+<summary>
+tuicoreservice interface
+</summary>
+<interface name="connect_to_tui_coresvc" lineno="33">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+</module>
+<module name="tvmapploader" filename="policy/modules/device/tvmapploader.if">
+<summary>
+tvmapploader interface
+</summary>
+</module>
+<module name="vendor" filename="policy/modules/device/vendor.if">
+<summary> devices interface </summary>
+<interface name="init_vendor_domain" lineno="45">
+<summary>
+Transition to a new vendor_domain. See init_daemon_domain
+</summary>
+<param name="domain">
+<summary>
+Type to be used as a daemon domain.
+</summary>
+</param>
+<param name="entry_point">
+<summary>
+Type of the program to be used as an entry point to this domain.
+</summary>
+</param>
+</interface>
+<interface name="vendor_device_rw_exempt" lineno="65">
+<summary>
+Exempt a vendor domain from neverallows regarding access
+to generic device_t contexts
+</summary>
+<param name="domain">
+<summary>
+Domain to exempt
+</summary>
+</param>
+</interface>
+<interface name="vendor_kernel_load_exempt" lineno="83">
+<summary>
+Exempt a vendor domain from neverallows regarding kernel module loading
+</summary>
+<param name="domain">
+<summary>
+Domain to exempt
+</summary>
+</param>
+</interface>
+<interface name="vendor_read_target" lineno="101">
+<summary>
+Read target file
+</summary>
+<param name="domain">
+<summary>
+Domain to allow access to target
+</summary>
+</param>
+</interface>
+<interface name="rw_subsys_modem_dev" lineno="119">
+<summary>
+Read and write the subsys_modem device.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="rw_subsys_ssr_dev" lineno="137">
+<summary>
+Read and write the subsys_wcnss device.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="rw_audio_dev" lineno="155">
+<summary>
+Read and write  audio device nodes
+which are starting with msm_*
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="rw_video_dev" lineno="175">
+<summary>
+Read and write the /dev/v4l-subdev*
+or  /dev/media[0-9]device.
+or /dev/video[0-99] device
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="rw_shared_memory_dev" lineno="194">
+<summary>
+Read and write the shared_memory_log
+pointing to /dev/smem_log
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="rw_smd_dev" lineno="212">
+<summary>
+Read and write the smd_dev
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="rw_diag_dev" lineno="230">
+<summary>
+Read and write the diag_dev
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="device_read_iio_device" lineno="248">
+<summary>
+Read iio char devices
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="device_read_ubi_device" lineno="267">
+<summary>
+Read ubifs control devices
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+<interface name="device_manage_socket_file" lineno="297">
+<summary>
+Create named socket in /dev/socket
+Example: device_manage_socket(leprop_t, leprop_sock_t, "leprop")
+</summary>
+<param name="domain">
+<summary>
+Domain managing the socket
+</summary>
+</param>
+<param name="context">
+<summary>
+Context of newly created sockets
+</summary>
+</param>
+<param name="filename">
+<summary>
+Filename to transition
+</summary>
+</param>
+</interface>
+<interface name="device_search_sockets" lineno="320">
+<summary>
+Search for device sockets
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access
+</summary>
+</param>
+</interface>
+<interface name="device_rw_socket_files" lineno="338">
+<summary>
+read/write for device sockets
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access
+</summary>
+</param>
+</interface>
+</module>
+<module name="voice-ui-app" filename="policy/modules/device/voice-ui-app.if">
+<summary>
+voice-ui-app daemon interface
+</summary>
+<interface name="adk_pulseaudio_rw_voice_ui_files" lineno="34">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+<interface name="voiceui_manage_avs_fifo" lineno="42">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+<interface name="adk_voice_ui_dbus_chat" lineno="52">
+<summary>
+Summary is missing!
+</summary>
+<param name="?">
+<summary>
+Parameter descriptions are missing!
+</summary>
+</param>
+</interface>
+<interface name="manage_voice_ui_data_files" lineno="73">
+<summary>
+manage voice UI data files.
+</summary>
+<param name="domain">
+<summary>
+Domain allowed access.
+</summary>
+</param>
+</interface>
+</module>
+<module name="wlan" filename="policy/modules/device/wlan.if">
+<summary>WLAN Interface</summary>
+</module>

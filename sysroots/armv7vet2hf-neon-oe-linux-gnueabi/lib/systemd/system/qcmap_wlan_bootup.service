@@ -1,0 +1,9 @@
+[Unit]
+Description= WLAN Bootup service
+DefaultDependencies=no
+
+[Service]
+Restart=no
+RemainAfterExit=yes
+ExecStart=/sbin/mount-copybind /systemrw/misc/wifi /etc/misc/wifi
+Nice=-20

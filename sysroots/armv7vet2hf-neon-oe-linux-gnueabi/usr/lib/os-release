@@ -1,0 +1,5 @@
+ID=qti-distro-nogplv3-debug
+NAME="QTI Linux reference nogplv3 distro with debug capabilities."
+VERSION="39a2d82"
+VERSION_ID=39a2d82
+PRETTY_NAME="QTI Linux reference nogplv3 distro with debug capabilities. 39a2d82"

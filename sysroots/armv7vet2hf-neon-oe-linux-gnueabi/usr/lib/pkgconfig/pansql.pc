@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: pansql
+Description: pantech local database library
+Version: 1.0.0
+Libs: -L${libdir} -llog -lpansql
+Cflags: -I${includedir}/pansql

@@ -1,0 +1,16 @@
+#
+# Copyright: (c) 2020 WOORINET. All rights reserved.
+#
+[Unit]
+SourcePath=/usr/bin/pfotadaemon
+Description=FOTA Service
+After=mount-data.service
+
+[Service]
+User=root
+Restart=always
+ExecStart=/usr/bin/pfotadaemon
+ExecStop=/usr/bin/killall -QUIT pfotadaemon
+
+[Install]
+WantedBy=multi-user.target

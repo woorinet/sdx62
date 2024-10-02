@@ -1,0 +1,15 @@
+# Woori-net
+
+[Unit]
+Description=Woori-net root password Service
+#After=mount-data.service
+After=woorinetapp.service
+
+[Service]
+User=root
+Restart=no
+#RemainAfterExit=yes
+ExecStart=/etc/init.d/pwdef
+
+[Install]
+WantedBy=multi-user.target

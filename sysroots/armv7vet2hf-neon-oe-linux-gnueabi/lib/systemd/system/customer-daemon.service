@@ -1,0 +1,14 @@
+# Woori-net
+
+[Unit]
+Description=Woori-net customer daemon scripts Service
+After=pw-default.service
+
+[Service]
+User=root
+Restart=no
+#RemainAfterExit=yes
+ExecStart=/etc/init.d/customer-daemon
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description= QTI Mobile Broadband Copybind Service
+Before=mbimd.service mbimd_nonopt.service
+After=systemrw.mount
+Requires=systemrw.mount
+RequiresMountsFor=/systemrw
+DefaultDependencies=no
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/mount-copybind /systemrw/data/mbim_early_init /etc/data/mbim_early_init
+
+[Install]
+WantedBy=local-fs.target

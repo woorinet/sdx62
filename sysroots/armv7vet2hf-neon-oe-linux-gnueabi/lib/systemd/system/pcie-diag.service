@@ -1,0 +1,14 @@
+# Copyright (c) 2020-2021 Qualcomm Technologies, Inc.
+# All Rights Reserved.
+# Confidential and Proprietary - Qualcomm Technologies, Inc.
+#
+
+[Unit]
+Description=pcie-diag Service
+SourcePath=/etc/initscripts/pcie-diag
+After=pcie.service
+
+[Service]
+RemainAfterExit=yes
+ExecStartPre=+/bin/chown system:system /dev/mhi_pipe_4
+ExecStart=/etc/initscripts/pcie-diag

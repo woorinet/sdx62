@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: staticsmartup
+Description: smartupdate library
+Version: 1.0.0
+Libs: -L${libdir} -llog -lstaticsmartup
+Cflags: -I${includedir}/staticsmartup

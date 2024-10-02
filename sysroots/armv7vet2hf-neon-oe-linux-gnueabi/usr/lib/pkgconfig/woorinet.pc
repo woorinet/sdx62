@@ -1,0 +1,20 @@
+#===============================================================================
+#
+# Woorinet Libs
+#
+# GENERAL DESCRIPTION
+#    package configure file
+#
+# Copyright: (c) 2020 WOORINET. All rights reserved.
+#
+#===============================================================================
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: woorinet
+Description: WOORINET library to be used outside of Woorinet process. lib order below matters
+Version: 1.0.0
+Libs: -L${libdir}
+Cflags: -I${includedir}/woorinet-daemon

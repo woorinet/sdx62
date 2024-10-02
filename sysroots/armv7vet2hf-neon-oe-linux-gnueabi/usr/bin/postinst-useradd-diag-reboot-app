@@ -1,0 +1,299 @@
+#!/bin/sh
+export AR="arm-oe-linux-gnueabi-gcc-ar"
+export AS="arm-oe-linux-gnueabi-as "
+export BUILD_AR="ar"
+export BUILD_AS="as "
+export BUILD_CC="gcc "
+export BUILD_CCLD="gcc "
+export BUILD_CFLAGS="-isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/include -Og -g -feliminate-unused-debug-types -pipe"
+export BUILD_CPP="gcc  -E"
+export BUILD_CPPFLAGS="-isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/include"
+export BUILD_CXX="g++ "
+export BUILD_CXXFLAGS="-isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/include -Og -g -feliminate-unused-debug-types -pipe"
+export BUILD_FC="gfortran "
+export BUILD_LD="ld "
+export BUILD_LDFLAGS="-L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/lib                         -L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/lib                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2"
+export BUILD_NM="nm"
+export BUILD_RANLIB="ranlib"
+export BUILD_STRIP="strip"
+export CC="arm-oe-linux-gnueabi-gcc  -march=armv7ve -mthumb -mfpu=neon -mfloat-abi=hard -fstack-protector-strong -pie -fPIE -D_FORTIFY_SOURCE=2 -Wa,--noexecstack -Wformat -Wformat-security -Werror=format-security --sysroot=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur"
+export CCLD="arm-oe-linux-gnueabi-gcc  -march=armv7ve -mthumb -mfpu=neon -mfloat-abi=hard -fstack-protector-strong -pie -fPIE -D_FORTIFY_SOURCE=2 -Wa,--noexecstack -Wformat -Wformat-security -Werror=format-security --sysroot=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur"
+export CC_FOR_BUILD="gcc "
+export CFLAGS=" -DWOORINET -DWOORINET_IMAGE_APPS -I/opt/sdx65/include -include cust_woorinet_ap.h   -O2    -g -Wa,--noexecstack -fexpensive-optimizations   -frename-registers -ftree-vectorize   -finline-functions -finline-limit=64   -Wno-error=maybe-uninitialized -Wno-error=unused-result   "
+export CFLAGS_FOR_BUILD="-isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/include -Og -g -feliminate-unused-debug-types -pipe"
+export CPP="arm-oe-linux-gnueabi-gcc -E --sysroot=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur  -march=armv7ve -mthumb -mfpu=neon -mfloat-abi=hard -fstack-protector-strong -pie -fPIE -D_FORTIFY_SOURCE=2 -Wa,--noexecstack -Wformat -Wformat-security -Werror=format-security"
+export CPPFLAGS=" -DWOORINET -DWOORINET_IMAGE_APPS -I/opt/sdx65/include -include cust_woorinet_ap.h"
+export CPPFLAGS_FOR_BUILD="-isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/include"
+export CPP_FOR_BUILD="gcc  -E"
+export CXX="arm-oe-linux-gnueabi-g++  -march=armv7ve -mthumb -mfpu=neon -mfloat-abi=hard -fstack-protector-strong -pie -fPIE -D_FORTIFY_SOURCE=2 -Wa,--noexecstack -Wformat -Wformat-security -Werror=format-security --sysroot=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur"
+export CXXFLAGS=" -DWOORINET -DWOORINET_IMAGE_APPS -I/opt/sdx65/include -include cust_woorinet_ap.h   -O2    -g -Wa,--noexecstack -fexpensive-optimizations   -frename-registers -ftree-vectorize   -finline-functions -finline-limit=64   -Wno-error=maybe-uninitialized -Wno-error=unused-result    -fvisibility-inlines-hidden"
+export CXXFLAGS_FOR_BUILD="-isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/include -Og -g -feliminate-unused-debug-types -pipe"
+export CXX_FOR_BUILD="g++ "
+unset DISTRO
+export FC="arm-oe-linux-gnueabi-gfortran  -march=armv7ve -mthumb -mfpu=neon -mfloat-abi=hard -fstack-protector-strong -pie -fPIE -D_FORTIFY_SOURCE=2 -Wa,--noexecstack -Wformat -Wformat-security -Werror=format-security --sysroot=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur"
+export GIT_CEILING_DIRECTORIES="/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5"
+export HOME="/home/jdpark"
+export LC_ALL="en_US.UTF-8"
+export LD="arm-oe-linux-gnueabi-ld --sysroot=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur "
+export LDFLAGS="-Wl,-O1 -Wl,--hash-style=gnu -Wl,--as-needed -Wl,-z,relro,-z,now,-z,noexecstack"
+export LDFLAGS_FOR_BUILD="-L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/lib                         -L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/lib                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2"
+export LD_FOR_BUILD="ld "
+export LOGNAME="jdpark"
+unset MACHINE
+export MAKE="make"
+export NM="arm-oe-linux-gnueabi-nm"
+export OBJCOPY="arm-oe-linux-gnueabi-objcopy"
+export OBJDUMP="arm-oe-linux-gnueabi-objdump"
+export PATH="/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-uninative/x86_64-linux/usr/bin:/opt/sdx65/apps_proc/poky/meta-qti-bsp/scripts:/opt/sdx65/apps_proc/poky/scripts:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/bin/arm-oe-linux-gnueabi:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/bin/crossscripts:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/sbin:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/usr/bin:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/sbin:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/x86_64/bin:/opt/sdx65/apps_proc/poky/bitbake/bin:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/hosttools"
+export PKG_CONFIG_DIR="/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/lib/pkgconfig"
+export PKG_CONFIG_DISABLE_UNINSTALLED="yes"
+export PKG_CONFIG_LIBDIR="/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/lib/pkgconfig"
+export PKG_CONFIG_PATH="/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/lib/pkgconfig:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur/usr/share/pkgconfig"
+export PKG_CONFIG_SYSROOT_DIR="/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur"
+export PKG_CONFIG_SYSTEM_INCLUDE_PATH="/usr/include"
+export PKG_CONFIG_SYSTEM_LIBRARY_PATH="/lib:/usr/lib"
+export PSEUDO_DISABLED="1"
+export PSEUDO_UNLOAD="1"
+export RANLIB="arm-oe-linux-gnueabi-gcc-ranlib"
+export READELF="arm-oe-linux-gnueabi-readelf"
+unset SHELL
+export STRINGS="arm-oe-linux-gnueabi-strings"
+export STRIP="arm-oe-linux-gnueabi-strip"
+unset TARGET_ARCH
+export TARGET_CPPFLAGS=" -DWOORINET -DWOORINET_IMAGE_APPS -I/opt/sdx65/include -include cust_woorinet_ap.h"
+export TERM="screen"
+export TZ="UTC"
+export USER="jdpark"
+export WOORINET_FLAGS=" -DWOORINET -DWOORINET_IMAGE_APPS -I/opt/sdx65/include -include cust_woorinet_ap.h"
+export WOORINET_PRJ_ROOT="/opt/sdx65"
+export WORKSPACE="/opt/sdx65/apps_proc/src"
+export WORKSPACEROOT="/opt/sdx65/apps_proc"
+export base_bindir="/bin"
+export base_libdir="/lib"
+export base_prefix=""
+export base_sbindir="/sbin"
+export bindir="/usr/bin"
+export datadir="/usr/share"
+export docdir="/usr/share/doc"
+export exec_prefix="/usr"
+export includedir="/usr/include"
+export infodir="/usr/share/info"
+export libdir="/usr/lib"
+export libexecdir="/usr/libexec"
+export localstatedir="/var"
+export lt_cv_sys_lib_dlsearch_path_spec="/usr/lib /lib"
+export mandir="/usr/share/man"
+export nonarch_base_libdir="/lib"
+export nonarch_libdir="/usr/lib"
+export oldincludedir="/usr/include"
+export prefix="/usr"
+export sbindir="/usr/sbin"
+export servicedir="/srv"
+export sharedstatedir="/com"
+export sysconfdir="/etc"
+export systemd_system_unitdir="/lib/systemd/system"
+export systemd_unitdir="/lib/systemd"
+export systemd_user_unitdir="/usr/lib/systemd/user"
+export userfsdatadir="/data"
+
+useradd_sysroot() {
+	# Pseudo may (do_prepare_recipe_sysroot) or may not (do_populate_sysroot_setscene) be running
+	# at this point so we're explicit about the environment so pseudo can load if
+	# not already present.
+	# PSEUDO_SYSROOT can contain references to the build architecture and COMPONENT_DIR
+	# so needs the STAGING_FIXME below
+	export PSEUDO="PSEUDO_PREFIX=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-components/x86_64/pseudo-native/usr PSEUDO_LOCALSTATEDIR=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/pseudo/ PSEUDO_PASSWD=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur:/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-components/x86_64/pseudo-native PSEUDO_NOSYMLINKEXP=1 PSEUDO_IGNORE_PATHS=/usr/,/etc/,/lib,/dev/,/run/,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/temp,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur,/opt/sdx65/apps_proc/sstate-cache,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/stamps,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sstate-control,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/buildstats,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-components,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/pkgdata,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/deploy-,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/sstate-build-package_,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/sstate-install-package_,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/pkgdata-sysroot,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/deploy,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/buildhistory,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/cache,/opt/sdx65/apps_proc/poky/scripts,/opt/sdx65/apps_proc/poky/meta/files/common-licenses,/opt/sdx65/apps_proc/poky/meta-qti-bsp-prop/files/qcom-licenses,/opt/sdx65/apps_proc/poky/meta-qti-bsp/files/common-licenses,/opt/sdx65/apps_proc/poky/meta-openembedded/meta-python/licenses,/opt/sdx65/apps_proc/poky/meta-openembedded/meta-oe/licenses,/opt/sdx65/apps_proc/poky/meta-openembedded/meta-multimedia/licenses,/opt/sdx65/apps_proc/poky/meta-openembedded/meta-networking/licenses,/opt/sdx65/apps_proc/poky/meta-gplv2/licenses,/opt/sdx65/apps_proc/poky/meta/COPYING,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/mdm-ss-mgr/diag-reboot-app/,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/armv7vet2hf-neon-oe-linux-gnueabi/diag-reboot-app/git-r5/build PSEUDO_DISABLED=0 /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-components/x86_64/pseudo-native/usr/bin/pseudo"
+
+	# Explicitly set $D since it isn't set to anything
+	# before do_prepare_recipe_sysroot
+	D=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots/sdxlemur
+
+	# base-passwd's postinst may not have run yet in which case we'll get called later, just exit.
+	# Beware that in some cases we might see the fake pseudo passwd here, in which case we also must
+	# exit.
+	if [ ! -f $D/etc/passwd ] ||
+			grep -q this-is-the-pseudo-passwd $D/etc/passwd; then
+		exit 0
+	fi
+
+	# It is also possible we may be in a recipe which doesn't have useradd dependencies and hence the
+	# useradd/groupadd tools are unavailable. If there is no dependency, we assume we don't want to
+	# create users in the sysroot
+	if ! command -v useradd; then
+		bbwarn "command useradd not found!"
+		exit 0
+	fi
+
+	# Add groups and users defined for all recipe packages
+	GROUPADD_PARAM="                         -g 2901 kmsg; 			-g 3004 net_raw; 			-g 3005 net_admin; 			-g 3009 readproc; 			-g 3010 wakelock; 			-g 3013 qwes; 			-g 3018 gpio; 			"
+	USERADD_PARAM=" 			-u 5002 -U leprop; 			-u 1000 -U system; 			-u 1001 -U radio; 			-G leprop -u 1002 -U bluetooth; 			-u 1003 -U graphics; 			-u 1004 -g input input; 			-G diag,system -u 1005 -g audio audio; 			-G inet,system,leprop -u 1006 -U camera; 			-u 1010 -U wifi; 			-u 1013 -U media; 			-u 1036 -U logd; 			-u 2000 -U adb; 			-G diag,inet,system,leprop -u 3011 -U sensors; 			-u 4000 -U apps; 			-u 9999 -U nobody; 			-G audio,camera,system,leprop,video -u 5000 -U qmmfsvr; 			-G audio,camera,input,system,inet,leprop,video -u 5001 -U qmmfwebsvr; 			-G audio,camera,input,system,inet,leprop,video -u 5003 -U ipcwebsvr; 			-u 4021 -U locclient; 			-G system,locclient -u 1021 -U gps; 			-G system,diag,radio -u 4023 -U mcm; 			-u 3014 -U powermgr; 			-u 3015 -U ubi; 			-u 2906 -U qrtr; 			"
+	GROUPMEMS_PARAM=""
+
+	# Tell the system to use the environment vars
+	UA_SYSROOT=1
+
+	useradd_preinst
+}
+
+bbwarn() {
+	if [ -p /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/temp/fifo.1901 ] ; then
+		printf "%b\0" "bbwarn $*" > /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/temp/fifo.1901
+	else
+		echo "WARNING: $*"
+	fi
+}
+
+useradd_preinst() {
+OPT=""
+SYSROOT=""
+
+if test "x$D" != "x"; then
+	# Installing into a sysroot
+	SYSROOT="$D"
+	OPT="--root $D"
+
+	# Make sure login.defs is there, this is to make debian package backend work
+	# correctly while doing rootfs.
+	# The problem here is that if /etc/login.defs is treated as a config file for
+	# shadow package, then while performing preinsts for packages that depend on
+	# shadow, there might only be /etc/login.def.dpkg-new there in root filesystem.
+	if [ ! -e $D/etc/login.defs -a -e $D/etc/login.defs.dpkg-new ]; then
+	    cp $D/etc/login.defs.dpkg-new $D/etc/login.defs
+	fi
+
+	# user/group lookups should match useradd/groupadd --root
+	export PSEUDO_PASSWD="$SYSROOT"
+fi
+
+# If we're not doing a special SSTATE/SYSROOT install
+# then set the values, otherwise use the environment
+if test "x$UA_SYSROOT" = "x"; then
+	# Installing onto a target
+	# Add groups and users defined only for this package
+	GROUPADD_PARAM="${GROUPADD_PARAM}"
+	USERADD_PARAM="${USERADD_PARAM}"
+	GROUPMEMS_PARAM="${GROUPMEMS_PARAM}"
+fi
+
+# Perform group additions first, since user additions may depend
+# on these groups existing
+if test "x`echo $GROUPADD_PARAM | tr -d '[:space:]'`" != "x"; then
+	echo "Running groupadd commands..."
+	# Invoke multiple instances of groupadd for parameter lists
+	# separated by ';'
+	opts=`echo "$GROUPADD_PARAM" | cut -d ';' -f 1 | sed -e 's#[ \t]*$##'`
+	remaining=`echo "$GROUPADD_PARAM" | cut -d ';' -f 2- | sed -e 's#[ \t]*$##'`
+	while test "x$opts" != "x"; do
+		perform_groupadd "$SYSROOT" "$OPT $opts"
+		if test "x$opts" = "x$remaining"; then
+			break
+		fi
+		opts=`echo "$remaining" | cut -d ';' -f 1 | sed -e 's#[ \t]*$##'`
+		remaining=`echo "$remaining" | cut -d ';' -f 2- | sed -e 's#[ \t]*$##'`
+	done
+fi
+
+if test "x`echo $USERADD_PARAM | tr -d '[:space:]'`" != "x"; then
+	echo "Running useradd commands..."
+	# Invoke multiple instances of useradd for parameter lists
+	# separated by ';'
+	opts=`echo "$USERADD_PARAM" | cut -d ';' -f 1 | sed -e 's#[ \t]*$##'`
+	remaining=`echo "$USERADD_PARAM" | cut -d ';' -f 2- | sed -e 's#[ \t]*$##'`
+	while test "x$opts" != "x"; do
+		perform_useradd "$SYSROOT" "$OPT $opts"
+		if test "x$opts" = "x$remaining"; then
+			break
+		fi
+		opts=`echo "$remaining" | cut -d ';' -f 1 | sed -e 's#[ \t]*$##'`
+		remaining=`echo "$remaining" | cut -d ';' -f 2- | sed -e 's#[ \t]*$##'`
+	done
+fi
+
+if test "x`echo $GROUPMEMS_PARAM | tr -d '[:space:]'`" != "x"; then
+	echo "Running groupmems commands..."
+	# Invoke multiple instances of groupmems for parameter lists
+	# separated by ';'
+	opts=`echo "$GROUPMEMS_PARAM" | cut -d ';' -f 1 | sed -e 's#[ \t]*$##'`
+	remaining=`echo "$GROUPMEMS_PARAM" | cut -d ';' -f 2- | sed -e 's#[ \t]*$##'`
+	while test "x$opts" != "x"; do
+		perform_groupmems "$SYSROOT" "$OPT $opts"
+		if test "x$opts" = "x$remaining"; then
+			break
+		fi
+		opts=`echo "$remaining" | cut -d ';' -f 1 | sed -e 's#[ \t]*$##'`
+		remaining=`echo "$remaining" | cut -d ';' -f 2- | sed -e 's#[ \t]*$##'`
+	done
+fi
+}
+
+perform_groupadd() {
+	local rootdir="$1"
+	local opts="$2"
+	bbnote "diag-reboot-app: Performing groupadd with [$opts]"
+	local groupname=`echo "$opts" | awk '{ print $NF }'`
+	local group_exists="`grep "^$groupname:" $rootdir/etc/group || true`"
+	if test "x$group_exists" = "x"; then
+		eval flock -x $rootdir/etc -c \"$PSEUDO groupadd \$opts\" || true
+		group_exists="`grep "^$groupname:" $rootdir/etc/group || true`"
+		if test "x$group_exists" = "x"; then
+			bbfatal "diag-reboot-app: groupadd command did not succeed."
+		fi
+	else
+		bbnote "diag-reboot-app: group $groupname already exists, not re-creating it"
+	fi
+}
+
+perform_groupmems() {
+	local rootdir="$1"
+	local opts="$2"
+	bbnote "diag-reboot-app: Performing groupmems with [$opts]"
+	local groupname=`echo "$opts" | awk '{ for (i = 1; i < NF; i++) if ($i == "-g" || $i == "--group") print $(i+1) }'`
+	local username=`echo "$opts" | awk '{ for (i = 1; i < NF; i++) if ($i == "-a" || $i == "--add") print $(i+1) }'`
+	bbnote "diag-reboot-app: Running groupmems command with group $groupname and user $username"
+	local mem_exists="`grep "^$groupname:[^:]*:[^:]*:\([^,]*,\)*$username\(,[^,]*\)*$" $rootdir/etc/group || true`"
+	if test "x$mem_exists" = "x"; then
+		eval flock -x $rootdir/etc -c \"$PSEUDO groupmems \$opts\" || true
+		mem_exists="`grep "^$groupname:[^:]*:[^:]*:\([^,]*,\)*$username\(,[^,]*\)*$" $rootdir/etc/group || true`"
+		if test "x$mem_exists" = "x"; then
+			bbfatal "diag-reboot-app: groupmems command did not succeed."
+		fi
+	else
+		bbnote "diag-reboot-app: group $groupname already contains $username, not re-adding it"
+	fi
+}
+
+perform_useradd() {
+	local rootdir="$1"
+	local opts="$2"
+	bbnote "diag-reboot-app: Performing useradd with [$opts]"
+	local username=`echo "$opts" | awk '{ print $NF }'`
+	local user_exists="`grep "^$username:" $rootdir/etc/passwd || true`"
+	if test "x$user_exists" = "x"; then
+		eval flock -x $rootdir/etc -c  \"$PSEUDO useradd \$opts\" || true
+		user_exists="`grep "^$username:" $rootdir/etc/passwd || true`"
+		if test "x$user_exists" = "x"; then
+			bbfatal "diag-reboot-app: useradd command did not succeed."
+		fi
+	else
+		bbnote "diag-reboot-app: user $username already exists, not re-creating it"
+	fi
+}
+
+bbfatal() {
+	if [ -p /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/temp/fifo.1901 ] ; then
+		printf "%b\0" "bbfatal $*" > /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/temp/fifo.1901
+	else
+		echo "ERROR: $*"
+	fi
+	exit 1
+}
+
+bbnote() {
+	if [ -p /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/temp/fifo.1901 ] ; then
+		printf "%b\0" "bbnote $*" > /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/build-sysroots/1.0-r0/temp/fifo.1901
+	else
+		echo "NOTE: $*"
+	fi
+}
+
+useradd_sysroot

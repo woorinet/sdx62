@@ -1,0 +1,9 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: diag-router
+Description: Common functions for DIAG project test assets
+Version: 1.0.0
+Cflags: -I${includedir}/diag-router

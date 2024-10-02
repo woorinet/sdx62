@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: loc-api-wds
+Description: QTI Location WDS QMI utility
+Version: @VERSION
+Libs: -L${libdir} -lloc_api_wds
+Cflags: -I${includedir}/loc-api-wds

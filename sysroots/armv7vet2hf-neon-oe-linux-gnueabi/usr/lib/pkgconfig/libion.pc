@@ -1,0 +1,10 @@
+prefix=/usr
+exec_prefix=/usr
+libdir=/usr/lib
+includedir=/usr/include
+
+Name: libion
+Description: libion library
+Version: 1.0.0
+Libs: -L${libdir} -lion
+Cflags: -I${includedir}/ion_headers  -DWOORINET -DWOORINET_IMAGE_APPS -I/opt/sdx65/include -include cust_woorinet_ap.h   -O2    -g -Wa,--noexecstack -fexpensive-optimizations   -frename-registers -ftree-vectorize   -finline-functions -finline-limit=64   -Wno-error=maybe-uninitialized -Wno-error=unused-result    -DTARGET_ION_ABI_VERSION=2

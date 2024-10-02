@@ -1,0 +1,47 @@
+export SDKTARGETSYSROOT=/home/pkang/sdk/sdx65/sysroots/armv7vet2hf-neon-oe-linux-gnueabi
+export PATH=/home/pkang/sdk/sdx65/sysroots/x86_64-pokysdk-linux/usr/bin:/home/pkang/sdk/sdx65/sysroots/x86_64-pokysdk-linux/usr/bin/arm-oe-linux-gnueabi:$PATH
+export CCACHE_PATH=$sdkpathnative$bindir:$sdkpathnative$bindir/arm-oe-linux-gnueabi:$CCACHE_PATH
+export PKG_CONFIG_SYSROOT_DIR=$SDKTARGETSYSROOT
+export PKG_CONFIG_PATH=$SDKTARGETSYSROOT/usr/lib/pkgconfig
+export CONFIG_SITE=/home/pkang/sdk/sdx65/site-config-armv7vet2hf-neon-oe-linux-gnueabi
+export OECORE_NATIVE_SYSROOT="/home/pkang/sdk/sdx65/sysroots/x86_64-pokysdk-linux"
+export OECORE_TARGET_SYSROOT="$SDKTARGETSYSROOT"
+export OECORE_ACLOCAL_OPTS="-I /home/pkang/sdk/sdx65/sysroots/x86_64-pokysdk-linux/usr/share/aclocal"
+export KENREL_SRC=/home/pkang/sdk/sdx65/sysroots/armv7vet2hf-neon-oe-linux-gnueabi/usr/src/kernel
+export PYTHONHOME=/home/pkang/sdk/sdx65/sysroots/x86_64-pokysdk-linux/usr
+export CC="arm-oe-linux-gnueabi-gcc -march=armv7-a -mfloat-abi=hard -mfpu=neon --sysroot=$SDKTARGETSYSROOT"
+export CXX="arm-oe-linux-gnueabi-g++ -march=armv7-a -mfloat-abi=hard -mfpu=neon --sysroot=$SDKTARGETSYSROOT"
+export CPP="arm-oe-linux-gnueabi-gcc -E -march=armv7-a -mfloat-abi=hard -mfpu=neon --sysroot=$SDKTARGETSYSROOT"
+export AS="arm-oe-linux-gnueabi-as "
+export LD="arm-oe-linux-gnueabi-ld --sysroot=$SDKTARGETSYSROOT"
+export GDB=arm-oe-linux-gnueabi-gdb
+export STRIP=arm-oe-linux-gnueabi-strip
+export RANLIB=arm-oe-linux-gnueabi-ranlib
+export OBJCOPY=arm-oe-linux-gnueabi-objcopy
+export OBJDUMP=arm-oe-linux-gnueabi-objdump
+export AR=arm-oe-linux-gnueabi-ar
+export NM=arm-oe-linux-gnueabi-nm
+export M4=m4
+export TARGET_PREFIX=arm-oe-linux-gnueabi-
+export CONFIGURE_FLAGS="--target=arm-oe-linux-gnueabi --host=arm-oe-linux-gnueabi --build=x86_64-linux --with-libtool-sysroot=$SDKTARGETSYSROOT"
+export CFLAGS="-Os -fexpensive-optimizations -frename-registers -fomit-frame-pointer"
+export CXXFLAGS="-Os -fexpensive-optimizations -frename-registers -fomit-frame-pointer"
+export LDFLAGS="-Wl,-O1 -Wl,--hash-style=gnu -Wl,--as-needed"
+export CPPFLAGS="-Os"
+export KCFLAGS="--sysroot=$SDKTARGETSYSROOT"
+export OECORE_DISTRO_VERSION="201609201904"
+export OECORE_SDK_VERSION="nodistro.0"
+export ARCH=arm
+export CROSS_COMPILE=arm-oe-linux-gnueabi-
+
+# Append environment subscripts
+if [ -d "$OECORE_TARGET_SYSROOT/environment-setup.d" ]; then
+    for envfile in $OECORE_TARGET_SYSROOT/environment-setup.d/*.sh; do
+	    source $envfile
+    done
+fi
+if [ -d "$OECORE_NATIVE_SYSROOT/environment-setup.d" ]; then
+    for envfile in $OECORE_NATIVE_SYSROOT/environment-setup.d/*.sh; do
+	    source $envfile
+    done
+fi

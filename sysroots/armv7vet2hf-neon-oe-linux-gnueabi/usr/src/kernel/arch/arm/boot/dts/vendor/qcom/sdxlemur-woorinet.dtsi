@@ -1,0 +1,11 @@
+
+&soc {
+	/* Woorinet boot magic */
+	qcom,msm-imem@1468f000 {
+		woorinet_magic@28 {
+			compatible = "qcom,msm-imem-cookie-woorinet-magic";
+			reg = <0x28 4>;
+		};
+	};
+};
+

@@ -1,0 +1,10 @@
+root:$6$aiVFLA9iwGLkeKxN$khOcyb/3xQUrR7TBsjirLru3zhFgjagkkm.UnRB101QqQE5mF7WVQ..K5e6/XpO8pZMU1Lmu0YebfoxANguKm1:0:0:root:/home/root:/bin/sh
+daemon:*:1:1:daemon:/usr/sbin:/bin/false
+bin:*:2:2:bin:/bin:/bin/false
+sys:*:3:3:sys:/dev:/bin/false
+sync:*:4:65534:sync:/bin:/bin/sync
+proxy:*:13:13:proxy:/bin:/bin/false
+www-data:*:33:33:www-data:/var/www:/bin/false
+backup:*:34:34:backup:/var/backups:/bin/false
+diag:*:53:53:diag:/nonexistent:/bin/false
+nobody:*:65534:65534:nobody:/nonexistent:/bin/false

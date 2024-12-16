@@ -72,6 +72,10 @@ unzip -o "sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm
 
 unzip -o "sysroots/armv7vet2hf-neon-oe-linux-gnueabi/usr/lib/libprotoc.zip" -d "sysroots/armv7vet2hf-neon-oe-linux-gnueabi/usr/lib"
 
+chmod +x sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0/cc1
+chmod +x sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0/cc1plus
+chmod +x sysroots/x86_64-pokysdk-linux/usr/libexec/arm-oe-linux-gnueabi/gcc/arm-oe-linux-gnueabi/9.3.0/lto1
+
 echo "done"
 
 echo "SDK has been successfully set up and is ready to be used."

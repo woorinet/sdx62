@@ -1,0 +1,1 @@
+cmd_usr/include/asm/perf_regs.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/include/uapi/asm/perf_regs.h usr/include/asm/perf_regs.h

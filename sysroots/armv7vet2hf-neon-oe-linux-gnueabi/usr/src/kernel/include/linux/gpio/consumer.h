@@ -111,6 +111,12 @@ int gpiod_get_direction(struct gpio_desc *desc);
 int gpiod_direction_input(struct gpio_desc *desc);
 int gpiod_direction_output(struct gpio_desc *desc, int value);
 int gpiod_direction_output_raw(struct gpio_desc *desc, int value);
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+int gpio_pull_up(struct gpio_desc *desc);
+int gpio_pull_down(struct gpio_desc *desc);
+#endif
+/* WOORINET STOP */
 
 /* Value get/set from non-sleeping context */
 int gpiod_get_value(const struct gpio_desc *desc);
@@ -345,6 +351,22 @@ static inline int gpiod_direction_output_raw(struct gpio_desc *desc, int value)
 	WARN_ON(desc);
 	return -ENOSYS;
 }
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+int gpio_pull_up(struct gpio_desc *desc)
+{
+	/* GPIO can never have been requested */
+	WARN_ON(1);
+	return -ENOSYS;
+}
+int gpio_pull_down(struct gpio_desc *desc)
+{
+	/* GPIO can never have been requested */
+	WARN_ON(1);
+	return -ENOSYS;
+}
+#endif
+/* WOORINET STOP */
 
 
 static inline int gpiod_get_value(const struct gpio_desc *desc)

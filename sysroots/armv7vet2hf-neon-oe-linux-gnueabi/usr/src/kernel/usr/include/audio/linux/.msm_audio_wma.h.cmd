@@ -1,0 +1,1 @@
+cmd_usr/include/audio/linux/msm_audio_wma.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/techpack/audio/include/uapi/audio/linux/msm_audio_wma.h usr/include/audio/linux/msm_audio_wma.h

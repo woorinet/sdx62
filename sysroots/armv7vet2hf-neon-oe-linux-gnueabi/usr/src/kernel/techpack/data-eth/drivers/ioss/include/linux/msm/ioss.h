@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
  */
 
@@ -318,6 +319,7 @@ struct ioss_channel {
 	bool enabled;
 
 	void *ioss_priv;
+	int multi_rx_queues;
 };
 
 struct ioss_device {
@@ -336,6 +338,7 @@ struct ioss_device {
 	void *private;
 
 	bool unbinding;
+	int vlan_tag_filter;
 
 	struct {
 		u64 apps_suspend;
@@ -451,6 +454,7 @@ struct ioss_device_stats {
 struct ioss_channel_stats {
 	u64 overflow_error;
 	u64 underflow_error;
+	u64 desc_unavail;
 };
 
 /**
@@ -495,6 +499,9 @@ static inline int ioss_channel_add_mem(
 	imem->addr = addr;
 	imem->daddr = daddr;
 	imem->size = size;
+
+	if (ch->multi_rx_queues)
+		size *=2;
 
 	if (dma_get_sgtable(real_dev, &imem->sgt, addr, daddr, size)) {
 		kfree(imem);

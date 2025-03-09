@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2008-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
+ * Copyright (c) 2022-2023, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <uapi/linux/msm_ion.h>
@@ -344,8 +344,13 @@ static void kgsl_destroy_ion(struct kgsl_memdesc *memdesc)
 		struct kgsl_mem_entry, memdesc);
 	struct kgsl_dma_buf_meta *meta = entry->priv_data;
 
+	if (memdesc->priv & KGSL_MEMDESC_MAPPED)
+		return;
+
 	if (meta != NULL) {
 		remove_dmabuf_list(meta);
+		dma_buf_unmap_attachment(meta->attach, meta->table,
+			DMA_BIDIRECTIONAL);
 		dma_buf_detach(meta->dmabuf, meta->attach);
 		dma_buf_put(meta->dmabuf);
 		kfree(meta);
@@ -364,6 +369,9 @@ static void kgsl_destroy_anon(struct kgsl_memdesc *memdesc)
 	int i = 0, j;
 	struct scatterlist *sg;
 	struct page *page;
+
+	if (memdesc->priv & KGSL_MEMDESC_MAPPED)
+		return;
 
 	for_each_sg(memdesc->sgt->sgl, sg, memdesc->sgt->nents, i) {
 		page = sg_page(sg);
@@ -1300,9 +1308,9 @@ kgsl_sharedmem_find(struct kgsl_process_private *private, uint64_t gpuaddr)
 	if (!private)
 		return NULL;
 
-	if (!kgsl_mmu_gpuaddr_in_range(private->pagetable, gpuaddr) &&
+	if (!kgsl_mmu_gpuaddr_in_range(private->pagetable, gpuaddr, 0) &&
 		!kgsl_mmu_gpuaddr_in_range(
-			private->pagetable->mmu->securepagetable, gpuaddr))
+			private->pagetable->mmu->securepagetable, gpuaddr, 0))
 		return NULL;
 
 	spin_lock(&private->mem_lock);
@@ -2036,6 +2044,10 @@ long kgsl_ioctl_gpu_aux_command(struct kgsl_device_private *dev_priv,
 		(KGSL_GPU_AUX_COMMAND_TIMELINE)))
 		return -EINVAL;
 
+	if ((param->flags & KGSL_GPU_AUX_COMMAND_SYNC) &&
+		(param->numsyncs > KGSL_MAX_SYNCPOINTS))
+		return -EINVAL;
+
 	context = kgsl_context_get_owner(dev_priv, param->context_id);
 	if (!context)
 		return -EINVAL;
@@ -2643,13 +2655,25 @@ static int kgsl_setup_dmabuf_useraddr(struct kgsl_device *device,
 			return -EFAULT;
 		}
 
-		/* Look for the fd that matches this the vma file */
+		/* Look for the fd that matches this vma file */
 		fd = iterate_fd(current->files, 0, match_file, vma->vm_file);
-		if (fd != 0) {
+		if (fd) {
 			dmabuf = dma_buf_get(fd - 1);
 			if (IS_ERR(dmabuf)) {
 				up_read(&current->mm->mmap_sem);
 				return PTR_ERR(dmabuf);
+			}
+			/*
+			 * It is possible that the fd obtained from iterate_fd
+			 * was closed before passing the fd to dma_buf_get().
+			 * Hence dmabuf returned by dma_buf_get() could be
+			 * different from vma->vm_file->private_data. Return
+			 * failure if this happens.
+			 */
+			if (dmabuf != vma->vm_file->private_data) {
+				dma_buf_put(dmabuf);
+				up_read(&current->mm->mmap_sem);
+				return -EBADF;
 			}
 		}
 	}
@@ -3014,8 +3038,6 @@ static int kgsl_setup_dma_buf(struct kgsl_device *device,
 		ret = PTR_ERR(sg_table);
 		goto out;
 	}
-
-	dma_buf_unmap_attachment(attach, sg_table, DMA_BIDIRECTIONAL);
 
 	meta->table = sg_table;
 	entry->priv_data = meta;
@@ -4309,6 +4331,9 @@ static void _unregister_device(struct kgsl_device *device)
 {
 	int minor;
 
+	if (device->gpu_sysfs_kobj.state_initialized)
+		kobject_del(&device->gpu_sysfs_kobj);
+
 	mutex_lock(&kgsl_driver.devlock);
 	for (minor = 0; minor < ARRAY_SIZE(kgsl_driver.devp); minor++) {
 		if (device == kgsl_driver.devp[minor]) {
@@ -4500,12 +4525,6 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 	device->pwrctrl.interrupt_num = status;
 	disable_irq(device->pwrctrl.interrupt_num);
 
-	rwlock_init(&device->context_lock);
-	spin_lock_init(&device->submit_lock);
-
-	idr_init(&device->timelines);
-	spin_lock_init(&device->timelines_lock);
-
 	device->events_wq = alloc_workqueue("kgsl-events",
 		WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS | WQ_HIGHPRI, 0);
 
@@ -4519,6 +4538,12 @@ int kgsl_device_platform_probe(struct kgsl_device *device)
 	status = kgsl_mmu_probe(device);
 	if (status != 0)
 		goto error_pwrctrl_close;
+
+	rwlock_init(&device->context_lock);
+	spin_lock_init(&device->submit_lock);
+
+	idr_init(&device->timelines);
+	spin_lock_init(&device->timelines_lock);
 
 	kgsl_device_debugfs_init(device);
 
@@ -4552,9 +4577,6 @@ void kgsl_device_platform_remove(struct kgsl_device *device)
 	}
 
 	kgsl_device_snapshot_close(device);
-
-	if (device->gpu_sysfs_kobj.state_initialized)
-		kobject_del(&device->gpu_sysfs_kobj);
 
 	idr_destroy(&device->context_idr);
 	idr_destroy(&device->timelines);

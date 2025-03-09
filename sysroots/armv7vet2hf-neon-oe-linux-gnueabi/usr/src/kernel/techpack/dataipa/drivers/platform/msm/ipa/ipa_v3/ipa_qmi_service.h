@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2013-2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022,2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifndef IPA_QMI_SERVICE_H
@@ -28,6 +30,7 @@
 #define SUBSYS_LOCAL_MODEM "modem"
 #endif
 #define SUBSYS_REMOTE_MODEM "esoc0"
+#define MAX_NUM_OF_MUX_CHANNEL  15 /* max mux channels */
 
 
 #define IPAWANDBG(fmt, args...) \
@@ -127,6 +130,8 @@ struct ipa3_rmnet_mux_val {
 	uint32_t  hdr_hdl;
 	uint16_t mtu_v4;
 	uint16_t mtu_v6;
+	uint8_t mac[MAC_ADDR_SIZE];
+	bool q6_qmi_send;
 };
 
 extern struct qmi_elem_info
@@ -142,6 +147,9 @@ extern struct qmi_elem_info
 extern struct qmi_elem_info ipa3_install_fltr_rule_req_msg_data_v01_ei[];
 extern struct qmi_elem_info ipa3_install_fltr_rule_resp_msg_data_v01_ei[];
 extern struct qmi_elem_info ipa3_fltr_installed_notif_req_msg_data_v01_ei[];
+
+extern struct qmi_elem_info ipa3_eth_backhaul_info_req_msg_v01_ei[];
+extern struct qmi_elem_info ipa3_eth_backhaul_info_resp_msg_v01_ei[];
 
 extern struct qmi_elem_info
 	ipa3_fltr_installed_notif_resp_msg_data_v01_ei[];
@@ -223,17 +231,24 @@ extern struct qmi_elem_info ipa_bw_change_ind_msg_v01_ei[];
 extern struct qmi_elem_info ipa_move_nat_req_msg_v01_ei[];
 extern struct qmi_elem_info ipa_move_nat_resp_msg_v01_ei[];
 extern struct qmi_elem_info ipa_move_nat_table_complt_ind_msg_v01_ei[];
+extern struct qmi_elem_info ipa_eth_backhaul_info_req_msg_v01_e1[];
+extern struct qmi_elem_info ipa_eth_backhaul_info_resp_msg_v01_e1[];
+extern struct qmi_elem_info ipa_rmnet_eth_info_indication_msg_v01_ei[];
 
 /**
  * struct ipa3_rmnet_context - IPA rmnet context
  * @ipa_rmnet_ssr: support modem SSR
  * @polling_interval: Requested interval for polling tethered statistics
  * @metered_mux_id: The mux ID on which quota has been set
+ * @num_mux_channel_eth: the num of below mux channel info
+ * @mux_channel_eth: info for eth pdu mux channels
  */
 struct ipa3_rmnet_context {
 	bool ipa_rmnet_ssr;
 	u64 polling_interval;
 	u32 metered_mux_id;
+	int num_mux_channel_eth;
+	struct ipa3_rmnet_mux_val mux_channel_eth[MAX_NUM_OF_MUX_CHANNEL];
 };
 
 extern struct ipa3_rmnet_context ipa3_rmnet_ctx;
@@ -263,6 +278,8 @@ int ipa3_qmi_ul_filter_request_send(
 /* sending filter-installed-notify-request to modem*/
 int ipa3_qmi_filter_notify_send(struct ipa_fltr_installed_notif_req_msg_v01
 		*req);
+/* Sending ETH backhaul details to Modem for dual backhaul */
+int ipa3_qmi_eth_backhaul_info_send(struct ipa_eth_backhaul_info_req_msg_v01 *req);
 
 /* voting for bus BW to ipa_rm*/
 int ipa3_vote_for_bus_bw(uint32_t *bw_mbps);
@@ -311,6 +328,9 @@ int rmnet_ipa3_query_tethering_stats_all(
 int rmnet_ipa3_reset_tethering_stats(struct wan_ioctl_reset_tether_stats *data);
 int rmnet_ipa3_set_lan_client_info(struct wan_ioctl_lan_client_info *data);
 
+int rmnet_ipa3_add_stats_counters_to_backup_list(struct ipa_lan_client
+					*lan_client, int device_type);
+
 int rmnet_ipa3_clear_lan_client_info(struct wan_ioctl_lan_client_info *data);
 
 int rmnet_ipa3_send_lan_client_msg(struct wan_ioctl_send_lan_client_msg *data);
@@ -319,6 +339,9 @@ int rmnet_ipa3_enable_per_client_stats(bool *data);
 
 int rmnet_ipa3_query_per_client_stats(
 	struct wan_ioctl_query_per_client_stats *data);
+
+int rmnet_ipa3_copy_lan_stats_msg(
+	struct wan_ioctl_send_lan_client_msg *data);
 
 int rmnet_ipa3_get_wan_mtu(
 	struct ipa_mtu_info *data);
@@ -359,6 +382,9 @@ int ipa3_qmi_send_mhi_ready_indication(
 
 int ipa3_qmi_send_endp_desc_indication(
 	struct ipa_endp_desc_indication_msg_v01 *req);
+
+int ipa3_qmi_send_rmnet_eth_indication(
+	struct ipa_rmnet_eth_info_indication_msg_v01 *req);
 
 int ipa3_qmi_send_mhi_cleanup_request(struct ipa_mhi_cleanup_req_msg_v01 *req);
 
@@ -519,6 +545,12 @@ static inline int ipa3_qmi_send_mhi_ready_indication(
 
 static inline int ipa3_qmi_send_endp_desc_indication(
 	struct ipa_endp_desc_indication_msg_v01 *req)
+{
+	return -EPERM;
+}
+
+static inline int ipa3_qmi_send_rmnet_eth_indication(
+	struct ipa_rmnet_eth_info_indication_msg_v01 *req)
 {
 	return -EPERM;
 }

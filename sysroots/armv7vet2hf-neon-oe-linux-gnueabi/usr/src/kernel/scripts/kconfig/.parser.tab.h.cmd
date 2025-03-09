@@ -1,1 +1,1 @@
-cmd_scripts/kconfig/parser.tab.h := bison -o scripts/kconfig/parser.tab.c --defines=scripts/kconfig/parser.tab.h -t -l scripts/kconfig/parser.y
+cmd_scripts/kconfig/parser.tab.h := bison -o scripts/kconfig/parser.tab.c --defines=scripts/kconfig/parser.tab.h -t -l /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/parser.y

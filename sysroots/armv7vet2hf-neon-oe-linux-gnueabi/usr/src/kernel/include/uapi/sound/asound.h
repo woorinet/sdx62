@@ -26,10 +26,6 @@
 
 #if defined(__KERNEL__) || defined(__linux__)
 #include <linux/types.h>
-#if !defined(_STRUCT_TIMESPEC) && !defined(__timespec_defined)
-#include <linux/time.h>
-#define __timespec_defined 1
-#endif
 #else
 #include <sys/ioctl.h>
 #endif

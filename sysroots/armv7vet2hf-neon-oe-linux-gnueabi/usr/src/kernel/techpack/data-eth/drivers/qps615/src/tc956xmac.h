@@ -127,6 +127,49 @@
  *  VERSION     : 01-00-39
  *  02 Feb 2022 : 1. Version update
  *  VERSION     : 01-00-40
+ *  04 Feb 2022 : 1. Version update
+ *  VERSION     : 01-00-41
+ *  14 Feb 2022 : 1. Reset assert and clock disable support during Link Down.
+ *		  2. Version update.
+ *  VERSION     : 01-00-42
+ *  22 Feb 2022 : 1. Supported GPIO configuration save and restoration
+ *		  2. Version update.
+ *  VERSION     : 01-00-43
+ *  25 Feb 2022 : 1. Version update.
+ *  VERSION     : 01-00-44
+ *  09 Mar 2022 : 1. Version update 
+ *  VERSION     : 01-00-45
+ *  22 Mar 2022 : 1. Version update 
+ *  VERSION     : 01-00-46
+ *  05 Apr 2022 : 1. Version update 
+ *  VERSION     : 01-00-47
+ *  06 Apr 2022 : 1. Version update 
+ *  VERSION     : 01-00-48
+ *  14 Apr 2022 : 1. Version update 
+ *  VERSION     : 01-00-49
+ *  25 Apr 2022 : 1. Version update 
+ *  VERSION     : 01-00-50
+ *  29 Apr 2022 : 1. Added variable for tracking port release status and Lock for syncing linkdown, port rlease and release of offloaded DMA channels
+ *		  2. Version update.
+ *  VERSION     : 01-00-51
+*  15 Jun 2022 : 1. Added debugfs support for module specific register dump
+*		 2. Version update.
+*  VERSION	   : 01-00-52 
+ *  31 Aug 2022 : 1. Added Fix for configuring Rx Parser when EEE is enabled and RGMII Interface is used
+ *		  2. Version update.
+ *  VERSION     : 01-00-54
+ *  02 Sep 2022 : 1. 2500Base-X support for line speeds 2.5Gbps, 1Gbps, 100Mbps.
+ *		  2. Version update
+ *  VERSION     : 01-00-55
+ *  21 Oct 2022 : 1. Version update 
+ *  VERSION     : 01-00-56
+ *  09 Nov 2022 : 1. Version update 
+ *  VERSION     : 01-00-57
+ *  22 Dec 2022 : 1. Support for SW reset during link down.
+ *                2. Version update
+ *  VERSION     : 01-00-58
+ *  09 May 2023 : 1. Version update 
+ *  VERSION     : 01-00-59
  */
 
 #ifndef __TC956XMAC_H__
@@ -182,7 +225,7 @@
 #define IRQ_DEV_NAME(x)		(((x) == RM_PF0_ID) ? ("eth0") : ("eth1"))
 #define WOL_IRQ_DEV_NAME(x)	(((x) == RM_PF0_ID) ? ("eth0_wol") : ("eth1_wol"))
 
-#define DRV_MODULE_VERSION	"V_01-00-40"
+#define DRV_MODULE_VERSION	"V_01-00-59"
 #define TC956X_FW_MAX_SIZE	(64*1024)
 
 #define ATR_AXI4_SLV_BASE		0x0800
@@ -312,7 +355,7 @@
 #define ENABLE_XFI_INTERFACE		1 /* XFI/SFI, this is same as USXGMII, except XPCS autoneg disabled */
 #define ENABLE_RGMII_INTERFACE		2
 #define ENABLE_SGMII_INTERFACE		3
-
+#define ENABLE_2500BASE_X_INTERFACE	4
 #define MTL_FPE_AFSZ_64		0
 #define MTL_FPE_AFSZ_128	1
 #define MTL_FPE_AFSZ_192	2
@@ -330,6 +373,7 @@
 #ifdef CONFIG_QGKI_MSM_BOOT_TIME_MARKER
 	#include <soc/qcom/boot_stats.h>
 #endif
+#define TC956X_MAX_LINK_DELAY		800
 
 #ifdef DMA_OFFLOAD_ENABLE
 struct tc956xmac_cm3_tamap {
@@ -500,6 +544,11 @@ struct tc956x_cbs_params {
 	u32 percentage;
 };
 
+struct tc956x_gpio_config {
+	u8 config; /* 1: configured, 0: not configured*/
+	u8 out_val; /* 0 or 1 */
+};
+
 struct tc956xmac_priv {
 	/* Frequently used values are kept adjacent for cache effect */
 	u32 tx_coal_frames;
@@ -664,7 +713,19 @@ struct tc956xmac_priv {
 	struct work_struct emac_phy_work;
 	u32 pm_saved_emac_rst; /* Save and restore EMAC Resets during suspend-resume sequence */
 	u32 pm_saved_emac_clk; /* Save and restore EMAC Clocks during suspend-resume sequence */
+	u32 pm_saved_linkdown_rst; /* Save and restore Resets during link-down sequence */
+	u32 pm_saved_linkdown_clk; /* Save and restore Clocks during link-down sequence */
+	bool port_link_down; /* Flag to save per port link down state */
+	bool port_release; /* Flag to notify appropriate sequence of link down & up */
+	struct mutex port_ld_release_lock; /* Mutex lock to handle (set and clear) flag to notify 
+						appropriate sequence of link down & up */
+	struct tc956x_gpio_config saved_gpio_config[GPIO_12 + 1]; /* Only GPIO0- GPIO06, GPI010-GPIO12 are used */
 
+	unsigned long link_state;
+	bool link_down_rst; /* For light-weight release and open during link-down */
+#ifdef CONFIG_DEBUG_FS
+	struct dentry *debugfs_dir; /* debugfs structure pointer for port specific */
+#endif
 };
 
 struct tc956x_version {
@@ -1029,5 +1090,6 @@ static inline int tc956x_platform_resume(struct tc956xmac_priv *priv) { return 0
 #endif
 
 int tc956x_GPIO_OutputConfigPin(struct tc956xmac_priv *priv, u32 gpio_pin, u8 out_value);
-
+int tc956x_gpio_restore_configuration(struct tc956xmac_priv *priv);
+void tc956xmac_link_change_set_power(struct tc956xmac_priv *priv, enum TC956X_PORT_LINK_CHANGE_STATE state);
 #endif /* __TC956XMAC_H__ */

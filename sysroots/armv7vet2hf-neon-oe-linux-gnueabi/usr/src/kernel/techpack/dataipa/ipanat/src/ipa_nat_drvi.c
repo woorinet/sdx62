@@ -25,6 +25,10 @@
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
  * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * Changes from Qualcomm Innovation Center, Inc. are provided under the following license:
+ * Copyright (c) 2023-2024 Qualcomm Innovation Center, Inc. All rights reserved.
+ * SPDX-License-Identifier: BSD-3-Clause-Clear.
  */
 
 #include "ipa_nat_drv.h"
@@ -1167,7 +1171,7 @@ int ipa_nati_get_pdn_index(
 {
 	int i = 0;
 
-	for(i = 0; i < (IPA_MAX_PDN_NUM - 1); i++) {
+	for(i = 0; i < IPA_MAX_PDN_NUM; i++) {
 		if(pdns[i].public_ip == public_ip) {
 			IPADBG("ip 0x%X matches PDN index %d\n", public_ip, i);
 			*pdn_index = i;
@@ -1192,12 +1196,12 @@ int ipa_nati_alloc_pdn(
 
 	memset(&zero_test, 0, sizeof(zero_test));
 
-	if(num_pdns >= (IPA_MAX_PDN_NUM - 1)) {
+	if(num_pdns >= IPA_MAX_PDN_NUM) {
 		IPAERR("exceeded max num of PDNs, num_pdns %d\n", num_pdns);
 		return -EIO;
 	}
 
-	for(i = 0; i < (IPA_MAX_PDN_NUM - 1); i++) {
+	for(i = 0; i < IPA_MAX_PDN_NUM; i++) {
 		if(pdns[i].public_ip == pdn_info->public_ip)
 		{
 			IPADBG("found the same pdn in index %d\n", i);
@@ -1212,21 +1216,25 @@ int ipa_nati_alloc_pdn(
 			return 0;
 		}
 
-		if(!memcmp((pdns + i), &zero_test, sizeof(ipa_nat_pdn_entry)))
+		if(!memcmp((pdns + i), &zero_test, sizeof(ipa_nat_pdn_entry))&& (i != 0))
 		{
 			IPADBG("found an empty pdn in index %d\n", i);
 			break;
 		}
 	}
 
-	if(i >= (IPA_MAX_PDN_NUM - 1))
+	if(i >= IPA_MAX_PDN_NUM)
 	{
 		IPAERR("couldn't find an empty entry while num is %d\n",
 			   num_pdns);
 		return -EIO;
 	}
 
-	pdn_data.pdn_index    = i;
+	if(pdn_info->is_sta == true)
+		pdn_data.pdn_index    = 0;
+	else
+		pdn_data.pdn_index    = i;
+
 	pdn_data.public_ip    = pdn_info->public_ip;
 	pdn_data.src_metadata = pdn_info->src_metadata;
 	pdn_data.dst_metadata = pdn_info->dst_metadata;
@@ -1235,7 +1243,10 @@ int ipa_nati_alloc_pdn(
 	if(!ret)
 	{
 		num_pdns++;
-		*pdn_index = i;
+		if(pdn_info->is_sta == true)
+			*pdn_index = 0;
+		else
+			*pdn_index = i;
 		IPADBG("modify num_pdns (%d)\n", num_pdns);
 	}
 
@@ -1244,6 +1255,7 @@ int ipa_nati_alloc_pdn(
 
 int ipa_nati_get_pdn_cnt(void)
 {
+	IPADBG("No of pdn count is %d\n", num_pdns);
 	return num_pdns;
 }
 
@@ -1396,6 +1408,13 @@ int ipa_NATI_add_ipv4_tbl(
 
 	nat_cache_ptr = &ipv4_nat_cache[nmi];
 
+	if(!nat_cache_ptr)
+	{
+		IPAERR("Nat pointer is NULL\n");
+		ret = -EINVAL;
+		goto bail;
+	}
+
 	if (pthread_mutex_lock(&nat_mutex)) {
 		IPAERR("unable to lock the nat mutex\n");
 		ret = -EINVAL;
@@ -1423,6 +1442,15 @@ int ipa_NATI_add_ipv4_tbl(
 
 	nat_table = &nat_cache_ptr->ip4_tbl[nat_cache_ptr->table_cnt];
 
+	if(!nat_table)
+	{
+		IPAERR("Nat table pointer is NULL\n");
+		ret = -EINVAL;
+		goto unlock;
+	}
+
+	IPADBG("Creating NAT table\n")
+
 	ret = ipa_nati_create_table(
 		nat_cache_ptr,
 		nat_table,
@@ -1438,6 +1466,7 @@ int ipa_NATI_add_ipv4_tbl(
 	/*
 	 * Initialize the ipa hw with nat table dimensions
 	 */
+	IPADBG("post nati ipv4 init cmd\n");
 	ret = ipa_nati_post_ipv4_init_cmd(
 		nat_cache_ptr,
 		nat_table,
@@ -1501,7 +1530,13 @@ int ipa_NATI_del_ipv4_table(
 
 	int ret;
 
-	IPADBG("In\n");
+	IPADBG("handle %u\n", tbl_hdl);
+	if (!VALID_TBL_HDL(tbl_hdl))
+	{
+		IPAERR("Got invalid table handle %u\n", tbl_hdl);
+		ret = -EINVAL;
+		goto bail;
+	}
 
 	BREAK_TBL_HDL(tbl_hdl, nmi, tbl_hdl);
 
@@ -1513,6 +1548,18 @@ int ipa_NATI_del_ipv4_table(
 
 	IPADBG("nmi(%s)\n", ipa3_nat_mem_in_as_str(nmi));
 
+	IPADBG("nmi %d\n", nmi);
+
+	nat_cache_ptr = &ipv4_nat_cache[nmi];
+	if(nat_cache_ptr)
+		nat_table = &nat_cache_ptr->ip4_tbl[tbl_hdl - 1];
+
+	if(!nat_table)
+	{
+		IPAERR("Nat table is NULL\n");
+		ret = -EINVAL;
+		goto bail;
+	}
 	nat_cache_ptr = &ipv4_nat_cache[nmi];
 
 	nat_table = &nat_cache_ptr->ip4_tbl[tbl_hdl - 1];
@@ -1552,10 +1599,11 @@ bail:
 	return ret;
 }
 
-int ipa_NATI_query_timestamp(
+int ipa_NATI_query_timestamp_redirect(
 	uint32_t  tbl_hdl,
 	uint32_t  rule_hdl,
-	uint32_t* time_stamp )
+	uint32_t* time_stamp,
+	uint32_t* redirect)
 {
 	enum ipa3_nat_mem_in            nmi;
 	struct ipa_nat_cache*           nat_cache_ptr;
@@ -1611,6 +1659,7 @@ int ipa_NATI_query_timestamp(
 		   prep_nat_rule_4print(rule_ptr, buf, sizeof(buf)));
 
 	*time_stamp = rule_ptr->time_stamp;
+	*redirect = rule_ptr->redirect;
 
 unlock:
 	if (pthread_mutex_unlock(&nat_mutex)) {

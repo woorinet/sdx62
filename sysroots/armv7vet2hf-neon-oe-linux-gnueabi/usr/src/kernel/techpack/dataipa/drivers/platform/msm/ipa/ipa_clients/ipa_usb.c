@@ -16,8 +16,7 @@
 #include "ipa_rm_i.h"
 
 #define IPA_USB_DEV_READY_TIMEOUT_MSEC 10000
-
-#define IPA_HOLB_TMR_EN 0x1
+#define IPA_MAX_HOLB_TMR_VAL (4294967296 - 1)
 
 /* GSI channels weights */
 #define IPA_USB_DL_CHAN_LOW_WEIGHT 0x5
@@ -193,6 +192,7 @@ struct ipa3_usb_context {
 	struct dentry *dent;
 	struct ipa3_usb_smmu_reg_map smmu_reg_map;
 	struct ipa3_usb_teth_type_switch prev_teth;
+	struct ipa3_usb_smmu_reg_map smmu_reg_map_dummy;
 };
 
 enum ipa3_usb_op {
@@ -1039,6 +1039,102 @@ static bool ipa3_usb_check_chan_params(struct ipa_usb_xdci_chan_params *params)
 	return true;
 }
 
+/*
+ * ipa3_usb_smmu_map_dummy: Does the same job of ipa3_usb_smmu_map_xdci_channel.
+ * API to map geventcount dummy addr, which will be provided
+ * to GSI from USB to handle sw path. Where USB driver will take
+ * care of replenishing desc to ipa hw. This dummy gevntcount addr
+ * cannot be in same page as other, since other are actual usb hw addr.
+ * We map this dummy addr to AP smmu context, so that there will
+ * not be any NOC issue when IPA/GSI tries to access it.
+ */
+static int ipa3_usb_smmu_map_dummy(
+			struct ipa_usb_xdci_chan_params *params,
+			bool map
+			)
+{
+	int result = 0;
+	u32 gevntcount_r = rounddown(params->gevntcount_low_addr, PAGE_SIZE);
+	u32 xfer_scratch_r =
+		rounddown(params->xfer_scratch.depcmd_low_addr, PAGE_SIZE);
+
+	if ((ipa3_usb_ctx->smmu_reg_map.addr != xfer_scratch_r) &&
+		(ipa3_usb_ctx->smmu_reg_map.cnt != 0)) {
+		IPA_USB_ERR("No support more than 1 page map for USB regs");
+		WARN_ON(1);
+		return -EINVAL;
+	}
+
+	if (map) {
+		if (ipa3_usb_ctx->smmu_reg_map_dummy.cnt == 0) {
+			ipa3_usb_ctx->smmu_reg_map_dummy.addr = gevntcount_r;
+			result = ipa3_smmu_map_peer_reg(
+				ipa3_usb_ctx->smmu_reg_map_dummy.addr, true,
+				IPA_SMMU_CB_AP);
+			if (result) {
+				IPA_USB_ERR("failed to map USB regs %d\n",
+					result);
+				return result;
+			}
+
+			if (ipa3_usb_ctx->smmu_reg_map.cnt == 0) {
+				ipa3_usb_ctx->smmu_reg_map.addr =
+					xfer_scratch_r;
+				result = ipa3_smmu_map_peer_reg(
+					ipa3_usb_ctx->smmu_reg_map.addr, true,
+					IPA_SMMU_CB_AP);
+				if (result) {
+					IPA_USB_ERR(
+						"failed to map USB regs %d\n",
+						result);
+					return result;
+				}
+			}
+			ipa3_usb_ctx->smmu_reg_map.cnt++;
+			ipa3_usb_ctx->smmu_reg_map_dummy.cnt++;
+		}
+	} else {
+		if (gevntcount_r != ipa3_usb_ctx->smmu_reg_map_dummy.addr) {
+			IPA_USB_ERR(
+				"No support for unmap different reg\n");
+			return -EINVAL;
+		}
+
+		if (ipa3_usb_ctx->smmu_reg_map_dummy.cnt == 1) {
+			result = ipa3_smmu_map_peer_reg(
+				ipa3_usb_ctx->smmu_reg_map_dummy.addr, false,
+				IPA_SMMU_CB_AP);
+			if (result) {
+				IPA_USB_ERR("failed to unmap USB regs %d\n",
+					result);
+				return result;
+			}
+
+			if (ipa3_usb_ctx->smmu_reg_map.cnt == 1) {
+				if (xfer_scratch_r !=
+					ipa3_usb_ctx->smmu_reg_map.addr) {
+					IPA_USB_ERR(
+						"No support for un map different reg\n");
+					return -EINVAL;
+				}
+
+				result = ipa3_smmu_map_peer_reg(
+					ipa3_usb_ctx->smmu_reg_map.addr, false,
+					IPA_SMMU_CB_AP);
+				if (result) {
+					IPA_USB_ERR(
+						"failed to unmap USB regs %d\n",
+						result);
+					return result;
+				}
+			}
+			ipa3_usb_ctx->smmu_reg_map.cnt--;
+			ipa3_usb_ctx->smmu_reg_map_dummy.cnt--;
+		}
+	}
+	return result;
+}
+
 static int ipa3_usb_smmu_map_xdci_channel(
 	struct ipa_usb_xdci_chan_params *params, bool map)
 {
@@ -1047,13 +1143,22 @@ static int ipa3_usb_smmu_map_xdci_channel(
 	u32 xfer_scratch_r =
 		rounddown(params->xfer_scratch.depcmd_low_addr, PAGE_SIZE);
 
-	if (gevntcount_r != xfer_scratch_r) {
+	if ((gevntcount_r != xfer_scratch_r) &&
+		(params->is_sw_path == false)) {
 		IPA_USB_ERR("No support more than 1 page map for USB regs\n");
 		WARN_ON(1);
 		return -EINVAL;
 	}
 
-	if (map) {
+	if (params->is_sw_path == true) {
+		result = ipa3_usb_smmu_map_dummy(params, map);
+		if (result) {
+			IPA_USB_ERR("failed to %s USB regs %d\n",
+				(map == true)?"map":"unmap",
+				result);
+			return result;
+		}
+	} else if (map) {
 		if (ipa3_usb_ctx->smmu_reg_map.cnt == 0) {
 			ipa3_usb_ctx->smmu_reg_map.addr = gevntcount_r;
 			result = ipa3_smmu_map_peer_reg(
@@ -1722,12 +1827,12 @@ static int ipa3_usb_xdci_connect_internal(
 state_change_connected_fail:
 	ipa3_usb_disconnect_teth_prot(params->teth_prot);
 connect_teth_prot_fail:
-	ipa3_xdci_disconnect(params->ipa_to_usb_clnt_hdl, false, -1);
+	ipa3_xdci_disconnect(params->ipa_to_usb_clnt_hdl, false, -1, true);
 	ipa3_reset_gsi_channel(params->ipa_to_usb_clnt_hdl);
 	ipa3_reset_gsi_event_ring(params->ipa_to_usb_clnt_hdl);
 connect_dl_fail:
 	if (params->teth_prot != IPA_USB_DIAG) {
-		ipa3_xdci_disconnect(params->usb_to_ipa_clnt_hdl, false, -1);
+		ipa3_xdci_disconnect(params->usb_to_ipa_clnt_hdl, false, -1, true);
 		ipa3_reset_gsi_channel(params->usb_to_ipa_clnt_hdl);
 		ipa3_reset_gsi_event_ring(params->usb_to_ipa_clnt_hdl);
 	}
@@ -2119,7 +2224,7 @@ static int ipa_usb_xdci_disconnect_internal(u32 ul_clnt_hdl, u32 dl_clnt_hdl,
 	if (ipa3_usb_ctx->ttype_ctx[ttype].state != IPA_USB_SUSPENDED) {
 		spin_unlock_irqrestore(&ipa3_usb_ctx->state_lock, flags);
 		/* Stop DL/DPL channel */
-		result = ipa3_xdci_disconnect(dl_clnt_hdl, false, -1);
+		result = ipa3_xdci_disconnect(dl_clnt_hdl, false, -1, true);
 		if (result) {
 			IPA_USB_ERR("failed to disconnect DL/DPL channel\n");
 			goto bad_params;
@@ -2141,7 +2246,7 @@ static int ipa_usb_xdci_disconnect_internal(u32 ul_clnt_hdl, u32 dl_clnt_hdl,
 			/* Stop UL channel */
 			result = ipa3_xdci_disconnect(ul_clnt_hdl,
 				true,
-				ipa3_usb_ctx->qmi_req_id);
+				ipa3_usb_ctx->qmi_req_id, true);
 			if (result) {
 				IPA_USB_ERR("failed disconnect UL channel\n");
 				goto bad_params;
@@ -2337,7 +2442,7 @@ static int ipa3_usb_suspend_no_remote_wakeup(u32 ul_clnt_hdl, u32 dl_clnt_hdl,
 	}
 
 	/* Stop DL/DPL channel */
-	result = ipa3_xdci_disconnect(dl_clnt_hdl, false, -1);
+	result = ipa3_xdci_disconnect(dl_clnt_hdl, false, -1, false);
 	if (result) {
 		IPA_USB_ERR("failed to disconnect DL/DPL channel\n");
 		goto fail_exit;
@@ -2346,7 +2451,7 @@ static int ipa3_usb_suspend_no_remote_wakeup(u32 ul_clnt_hdl, u32 dl_clnt_hdl,
 	if (!IPA3_USB_IS_TTYPE_DPL(ttype)) {
 		/* Stop UL channel */
 		result = ipa3_xdci_disconnect(ul_clnt_hdl, true,
-			ipa3_usb_ctx->qmi_req_id);
+			ipa3_usb_ctx->qmi_req_id, false);
 		if (result) {
 			IPA_USB_ERR("failed disconnect UL channel\n");
 			goto start_dl;
@@ -2538,11 +2643,11 @@ stop_mhip:
 	if (ipa3_is_mhip_offload_enabled())
 		(void)ipa_mpm_mhip_xdci_pipe_disable(teth_prot);
 stop_dl:
-	(void)ipa3_xdci_disconnect(dl_clnt_hdl, false, -1);
+	(void)ipa3_xdci_disconnect(dl_clnt_hdl, false, -1, true);
 stop_ul:
 	if (!IPA3_USB_IS_TTYPE_DPL(ttype)) {
 		(void)ipa3_xdci_disconnect(ul_clnt_hdl, true,
-			ipa3_usb_ctx->qmi_req_id);
+			ipa3_usb_ctx->qmi_req_id, true);
 		ipa3_usb_ctx->qmi_req_id++;
 	}
 disconn_teth:
@@ -2562,6 +2667,7 @@ static int ipa_usb_xdci_resume_internal(u32 ul_clnt_hdl, u32 dl_clnt_hdl,
 	unsigned long flags;
 	enum ipa3_usb_transport_type ttype;
 	struct ipa_ep_cfg_ctrl ep_cfg_ctrl;
+	struct ipa_ep_cfg_holb holb_cfg;
 
 	mutex_lock(&ipa3_usb_ctx->general_mutex);
 	IPA_USB_DBG_LOW("entry\n");
@@ -2628,6 +2734,15 @@ static int ipa_usb_xdci_resume_internal(u32 ul_clnt_hdl, u32 dl_clnt_hdl,
 		IPA_USB_ERR("failed to start DL/DPL channel\n");
 		goto start_dl_fail;
 	}
+
+	if (ipa3_ctx->ipa_hw_type < IPA_HW_v4_0) {
+		memset(&holb_cfg, 0, sizeof(holb_cfg));
+		holb_cfg.en = IPA_HOLB_TMR_EN;
+		holb_cfg.tmr_val = IPA_MAX_HOLB_TMR_VAL;
+		ipa3_cfg_ep_holb(dl_clnt_hdl, &holb_cfg);
+
+	}
+
 
 	/* Change state to CONNECTED */
 	if (!ipa3_usb_set_state(IPA_USB_CONNECTED, false, ttype)) {

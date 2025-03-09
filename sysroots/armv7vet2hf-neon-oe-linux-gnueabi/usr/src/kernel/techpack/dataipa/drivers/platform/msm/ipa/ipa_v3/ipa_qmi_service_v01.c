@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2013-2019, 2021 The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/ipa_qmi_service_v01.h>
@@ -1230,6 +1232,48 @@ struct qmi_elem_info ipa3_init_modem_driver_req_msg_data_v01_ei[] = {
 		.ei_array	= ipa3_filter_tbl_info_type_data_v01_ei,
 	},
 	{
+		.data_type	= QMI_OPT_FLAG,
+		.elem_len	= 1,
+		.elem_size	= sizeof(uint8_t),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x24,
+		.offset		= offsetof(
+			struct ipa_init_modem_driver_req_msg_v01,
+			smem_info_valid),
+	},
+	{
+		.data_type	= QMI_STRUCT,
+		.elem_len	= 1,
+		.elem_size	= sizeof(struct ipa_modem_mem_info_type_v01),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x24,
+		.offset		= offsetof(
+			struct ipa_init_modem_driver_req_msg_v01,
+			smem_info),
+		.ei_array	= ipa3_modem_mem_info_type_data_v01_ei,
+	},
+	{
+		.data_type	= QMI_OPT_FLAG,
+		.elem_len	= 1,
+		.elem_size	= sizeof(uint8_t),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x25,
+		.offset		= offsetof(
+			struct ipa_init_modem_driver_req_msg_v01,
+			per_stats_smem_info_valid),
+	},
+	{
+		.data_type	= QMI_STRUCT,
+		.elem_len	= 1,
+		.elem_size	= sizeof(struct ipa_modem_mem_info_type_v01),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x25,
+		.offset		= offsetof(
+			struct ipa_init_modem_driver_req_msg_v01,
+			per_stats_smem_info),
+		.ei_array	= ipa3_modem_mem_info_type_data_v01_ei,
+	},
+	{
 		.data_type	= QMI_EOTI,
 		.array_type	= NO_ARRAY,
 		.tlv_type	= QMI_COMMON_TLV_TYPE,
@@ -1453,6 +1497,24 @@ struct qmi_elem_info ipa3_indication_reg_req_msg_data_v01_ei[] = {
 		.offset		= offsetof(
 			struct ipa_indication_reg_req_msg_v01,
 				bw_change_ind),
+	},
+	{
+		.data_type      = QMI_OPT_FLAG,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u8),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x15,
+		.offset         = offsetof(struct ipa_indication_reg_req_msg_v01,
+					   rmnet_eth_mac_info_valid),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_1_BYTE,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u8),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x15,
+		.offset         = offsetof(struct ipa_indication_reg_req_msg_v01,
+					   rmnet_eth_mac_info),
 	},
 	{
 		.data_type	= QMI_EOTI,
@@ -2141,6 +2203,83 @@ struct qmi_elem_info ipa3_install_fltr_rule_resp_msg_data_v01_ei[] = {
 		.data_type	= QMI_EOTI,
 		.array_type	= NO_ARRAY,
 		.tlv_type	= QMI_COMMON_TLV_TYPE,
+	},
+};
+
+struct qmi_elem_info ipa3_eth_backhaul_info_req_msg_v01_ei[] ={
+	{
+		.data_type	= QMI_UNSIGNED_1_BYTE,
+		.elem_len	= QMI_IPA_MAX_MAC_ADDR_LEN_V01,
+		.elem_size	= sizeof(uint8_t),
+		.array_type	= STATIC_ARRAY,
+		.tlv_type	= 0x01,
+		.offset		= offsetof(
+			struct ipa_eth_backhaul_info_req_msg_v01,
+			src_mac_addr),
+	},
+	{
+		.data_type	= QMI_UNSIGNED_1_BYTE,
+		.elem_len	= QMI_IPA_MAX_MAC_ADDR_LEN_V01,
+		.elem_size	= sizeof(uint8_t),
+		.array_type	= STATIC_ARRAY,
+		.tlv_type	= 0x02,
+		.offset		= offsetof(
+			struct ipa_eth_backhaul_info_req_msg_v01,
+			dst_mac_addr),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_4_BYTE,
+		.elem_len       = QMI_IPA_MAX_IPV4_ADDR_LEN_V01,
+		.elem_size      = sizeof(uint32_t),
+		.array_type       = STATIC_ARRAY,
+		.tlv_type       = 0x03,
+		.offset         = offsetof(
+			struct ipa_eth_backhaul_info_req_msg_v01,
+			ipv4_addr_eth0),
+	},
+	{
+		.data_type	= QMI_UNSIGNED_1_BYTE,
+		.elem_len	= 1,
+		.elem_size	= sizeof(uint8_t),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x04,
+		.offset		= offsetof(
+			struct ipa_eth_backhaul_info_req_msg_v01,
+			eth_pipe),
+	},
+	{
+		.data_type	= QMI_UNSIGNED_1_BYTE,
+		.elem_len	= 1,
+		.elem_size	= sizeof(uint8_t),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x05,
+		.offset		= offsetof(
+			struct ipa_eth_backhaul_info_req_msg_v01,
+			enable),
+	},
+	{
+		.data_type      = QMI_EOTI,
+		.array_type       = NO_ARRAY,
+		.tlv_type       = QMI_COMMON_TLV_TYPE,
+	},
+};
+
+struct qmi_elem_info ipa3_eth_backhaul_info_resp_msg_v01_ei[] ={
+	{
+		.data_type	= QMI_STRUCT,
+		.elem_len	= 1,
+		.elem_size	= sizeof(struct qmi_response_type_v01),
+		.array_type	= NO_ARRAY,
+		.tlv_type	= 0x02,
+		.offset		= offsetof(
+			struct ipa_eth_backhaul_info_resp_msg_v01,
+			resp),
+		.ei_array       = qmi_response_type_v01_ei,
+	},
+	{
+		.data_type      = QMI_EOTI,
+		.array_type       = NO_ARRAY,
+		.tlv_type       = QMI_COMMON_TLV_TYPE,
 	},
 };
 
@@ -5409,5 +5548,138 @@ struct qmi_elem_info ipa_move_nat_resp_msg_v01_ei[] = {
 		.data_type = QMI_EOTI,
 		.array_type = NO_ARRAY,
 		.tlv_type = QMI_COMMON_TLV_TYPE,
+	},
+};
+
+struct qmi_elem_info ipa_eth_backhaul_info_req_msg_v01_ei[] = {
+	{
+		.data_type      = QMI_UNSIGNED_1_BYTE,
+		.elem_len       = QMI_IPA_MAX_MAC_ADDR_LEN_V01,
+		.elem_size      = sizeof(u8),
+		.array_type       = STATIC_ARRAY,
+		.tlv_type       = 0x01,
+		.offset         = offsetof(struct ipa_eth_backhaul_info_req_msg_v01,
+					   src_mac_addr),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_1_BYTE,
+		.elem_len       = QMI_IPA_MAX_MAC_ADDR_LEN_V01,
+		.elem_size      = sizeof(u8),
+		.array_type       = STATIC_ARRAY,
+		.tlv_type       = 0x02,
+		.offset         = offsetof(struct ipa_eth_backhaul_info_req_msg_v01,
+					   dst_mac_addr),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_4_BYTE,
+		.elem_len       = QMI_IPA_MAX_IPV4_ADDR_LEN_V01,
+		.elem_size      = sizeof(u32),
+		.array_type       = STATIC_ARRAY,
+		.tlv_type       = 0x03,
+		.offset         = offsetof(struct ipa_eth_backhaul_info_req_msg_v01,
+					   ipv4_addr_eth0),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_1_BYTE,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u8),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x04,
+		.offset         = offsetof(struct ipa_eth_backhaul_info_req_msg_v01,
+					   eth_pipe),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_1_BYTE,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u8),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x05,
+		.offset         = offsetof(struct ipa_eth_backhaul_info_req_msg_v01,
+					   enable),
+	},
+	{
+		.data_type      = QMI_EOTI,
+		.array_type       = NO_ARRAY,
+		.tlv_type       = QMI_COMMON_TLV_TYPE,
+	},
+};
+
+struct qmi_elem_info ipa_eth_backhaul_info_resp_msg_v01_ei[] = {
+	{
+		.data_type      = QMI_STRUCT,
+		.elem_len       = 1,
+		.elem_size      = sizeof(struct qmi_response_type_v01),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x02,
+		.offset         = offsetof(struct ipa_eth_backhaul_info_resp_msg_v01,
+					   resp),
+		.ei_array      = qmi_response_type_v01_ei,
+	},
+	{
+		.data_type      = QMI_EOTI,
+		.array_type       = NO_ARRAY,
+		.tlv_type       = QMI_COMMON_TLV_TYPE,
+	},
+};
+
+static struct qmi_elem_info ipa_rmnet_eth_info_type_v01_ei[] = {
+	{
+		.data_type      = QMI_UNSIGNED_1_BYTE,
+		.elem_len       = QMI_IPA_MAX_MAC_ADDR_LEN_V01,
+		.elem_size      = sizeof(u8),
+		.array_type       = STATIC_ARRAY,
+		.tlv_type       = 0,
+		.offset         = offsetof(struct ipa_rmnet_eth_info_type_v01,
+					   mac_addr),
+	},
+	{
+		.data_type      = QMI_UNSIGNED_4_BYTE,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u32),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0,
+		.offset         = offsetof(struct ipa_rmnet_eth_info_type_v01,
+					   mux_id),
+	},
+	{
+		.data_type      = QMI_EOTI,
+		.array_type       = NO_ARRAY,
+		.tlv_type       = QMI_COMMON_TLV_TYPE,
+	},
+};
+
+struct qmi_elem_info ipa_rmnet_eth_info_indication_msg_v01_ei[] = {
+	{
+		.data_type      = QMI_OPT_FLAG,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u8),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x10,
+		.offset         = offsetof(struct ipa_rmnet_eth_info_indication_msg_v01,
+					   rmnet_eth_info_valid),
+	},
+	{
+		.data_type      = QMI_DATA_LEN,
+		.elem_len       = 1,
+		.elem_size      = sizeof(u8),
+		.array_type       = NO_ARRAY,
+		.tlv_type       = 0x10,
+		.offset         = offsetof(struct ipa_rmnet_eth_info_indication_msg_v01,
+					   rmnet_eth_info_len),
+	},
+	{
+		.data_type      = QMI_STRUCT,
+		.elem_len       = QMI_IPA_MAX_RMNET_ETH_INFO_V01,
+		.elem_size      = sizeof(struct ipa_rmnet_eth_info_type_v01),
+		.array_type       = VAR_LEN_ARRAY,
+		.tlv_type       = 0x10,
+		.offset         = offsetof(struct ipa_rmnet_eth_info_indication_msg_v01,
+					   rmnet_eth_info),
+		.ei_array      = ipa_rmnet_eth_info_type_v01_ei,
+	},
+	{
+		.data_type      = QMI_EOTI,
+		.array_type       = NO_ARRAY,
+		.tlv_type       = QMI_COMMON_TLV_TYPE,
 	},
 };

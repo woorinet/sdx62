@@ -6,6 +6,12 @@
 #include <linux/module.h>
 #include "f_gsi.h"
 #include "rndis.h"
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+#include <woorinet/aaudefs.h>
+#include <woorinet/bsudefs.h>
+#endif
+/* WOORINET STOP*/
 
 static struct usb_gsi_debugfs {
 	struct dentry *debugfs_root;
@@ -3092,6 +3098,11 @@ static int gsi_bind(struct usb_configuration *c, struct usb_function *f)
 		gsi_get_ether_addr(gsi->dev_addr,
 				   gsi->d_port.ipa_init_params.device_ethaddr);
 
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+		bs_rndis_mac_addr_get(gsi->host_addr);
+#endif
+/* WOORINET STOP */
 		gsi_get_ether_addr(gsi->host_addr,
 				   gsi->d_port.ipa_init_params.host_ethaddr);
 
@@ -3761,6 +3772,11 @@ static ssize_t gsi_host_addr_store(struct config_item *item,
 		return -EINVAL;
 
 	strlcpy(gsi->host_addr, page, GSI_MAX_MAC_ADDR_LEN);
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	bs_rndis_mac_addr_set(gsi->host_addr);
+#endif
+/* WOORINET STOP */
 
 	return len;
 }
@@ -3849,6 +3865,9 @@ static struct config_item_type gsi_func_rmnet_type = {
 
 static void gsi_inst_clean(struct gsi_opts *opts)
 {
+	if (!opts)
+		return;
+
 	if (opts->gsi->c_port.cdev.dev) {
 		struct cdev *cdev = &opts->gsi->c_port.cdev;
 		struct f_gsi *gsi = opts->gsi;
@@ -3962,7 +3981,7 @@ static void gsi_free_inst(struct usb_function_instance *f)
 	enum ipa_usb_teth_prot prot_id;
 	struct f_gsi *gsi;
 
-	if (!opts->gsi)
+	if (!opts || !opts->gsi)
 		return;
 
 	prot_id = opts->gsi->prot_id;

@@ -1,0 +1,1 @@
+cmd_arch/arm/include/generated/asm/unistd-nr.h := sh '/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/tools/syscallnr.sh' '/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/tools/syscall.tbl' 'arch/arm/include/generated/asm/unistd-nr.h' ''

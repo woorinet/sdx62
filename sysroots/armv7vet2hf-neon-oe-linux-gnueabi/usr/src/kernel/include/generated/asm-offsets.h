@@ -48,7 +48,7 @@
 #define SIGFRAME_RC3_OFFSET 756 /* offsetof(struct sigframe, retcode[3]) */
 #define RT_SIGFRAME_RC3_OFFSET 884 /* offsetof(struct rt_sigframe, sig.retcode[3]) */
 
-#define MM_CONTEXT_ID 424 /* offsetof(struct mm_struct, context.id.counter) */
+#define MM_CONTEXT_ID 376 /* offsetof(struct mm_struct, context.id.counter) */
 
 #define VMA_VM_MM 32 /* offsetof(struct vm_area_struct, vm_mm) */
 #define VMA_VM_FLAGS 40 /* offsetof(struct vm_area_struct, vm_flags) */

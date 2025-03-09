@@ -1,0 +1,1 @@
+cmd_usr/include/linux/tc_act/tc_pedit.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/tc_act/tc_pedit.h usr/include/linux/tc_act/tc_pedit.h

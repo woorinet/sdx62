@@ -14,6 +14,7 @@ deps_config := \
 	lib/vdso/Kconfig \
 	kernel/dma/Kconfig \
 	lib/xz/Kconfig \
+	lib/crypto/Kconfig \
 	lib/math/Kconfig \
 	lib/Kconfig \
 	certs/Kconfig \
@@ -31,7 +32,6 @@ deps_config := \
 	drivers/crypto/nx/Kconfig \
 	drivers/crypto/caam/Kconfig \
 	drivers/crypto/Kconfig \
-	lib/crypto/Kconfig \
 	crypto/async_tx/Kconfig \
 	crypto/Kconfig \
 	security/Kconfig.hardening \
@@ -215,6 +215,7 @@ deps_config := \
 	drivers/iio/chemical/Kconfig \
 	drivers/iio/amplifiers/Kconfig \
 	drivers/iio/afe/Kconfig \
+	drivers/iio/addac/Kconfig \
 	drivers/iio/adc/Kconfig \
 	drivers/iio/accel/Kconfig \
 	drivers/iio/buffer/Kconfig \
@@ -1238,7 +1239,6 @@ deps_config := \
 	net/x25/Kconfig \
 	drivers/net/appletalk/Kconfig \
 	net/llc/Kconfig \
-	net/decnet/Kconfig \
 	net/8021q/Kconfig \
 	net/dsa/Kconfig \
 	net/bridge/Kconfig \
@@ -1252,7 +1252,6 @@ deps_config := \
 	net/dccp/Kconfig \
 	net/bpfilter/Kconfig \
 	net/bridge/netfilter/Kconfig \
-	net/decnet/netfilter/Kconfig \
 	net/ipv6/netfilter/Kconfig \
 	net/ipv4/netfilter/Kconfig \
 	net/netfilter/ipvs/Kconfig \
@@ -1396,19 +1395,19 @@ include/config/auto.conf: \
 ifneq "$(ARCH)" "arm"
 include/config/auto.conf: FORCE
 endif
-ifneq "$(KERNELVERSION)" "5.4.147"
+ifneq "$(KERNELVERSION)" "5.4.281"
 include/config/auto.conf: FORCE
 endif
-ifneq "$(CC)" "arm-oe-linux-gnueabi-gcc  -mno-thumb-interwork -marm -fuse-ld=bfd -fmacro-prefix-map=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0=/usr/src/debug/make-mod-scripts/1.0-r0                      -fdebug-prefix-map=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0=/usr/src/debug/make-mod-scripts/1.0-r0                      -fdebug-prefix-map=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot=                      -fdebug-prefix-map=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native=  -fdebug-prefix-map=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work-shared/sdxlemur/kernel-source=/usr/src/kernel"
+ifneq "$(CC)" "arm-oe-linux-gnueabi-gcc  -mno-thumb-interwork -marm -fuse-ld=bfd -fmacro-prefix-map=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0=/usr/src/debug/make-mod-scripts/1.0-r0                      -fdebug-prefix-map=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0=/usr/src/debug/make-mod-scripts/1.0-r0                      -fdebug-prefix-map=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot=                      -fdebug-prefix-map=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native=  -fdebug-prefix-map=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source=/usr/src/kernel -fdebug-prefix-map=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-build-artifacts=/usr/src/kernel"
 include/config/auto.conf: FORCE
 endif
 ifneq "$(LD)" "arm-oe-linux-gnueabi-ld.bfd  "
 include/config/auto.conf: FORCE
 endif
-ifneq "$(srctree)" "/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work-shared/sdxlemur/kernel-source"
+ifneq "$(srctree)" "/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source"
 include/config/auto.conf: FORCE
 endif
-ifneq "$(CC_VERSION_TEXT)" "arm-oe-linux-gnueabi-gcc (GCC) 9.3.0"
+ifneq "$(CC_VERSION_TEXT)" "arm-oe-linux-gnueabi-gcc (GCC) 9.5.0"
 include/config/auto.conf: FORCE
 endif
 ifneq "$(NM)" "arm-oe-linux-gnueabi-nm"
@@ -1420,10 +1419,10 @@ endif
 ifneq "$(SRCARCH)" "arm"
 include/config/auto.conf: FORCE
 endif
-ifneq "$(HOSTCXX)" "g++  -isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/include -Og -g -feliminate-unused-debug-types -pipe -L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2"
+ifneq "$(HOSTCXX)" "g++  -isystem/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/include -O2 -pipe -L/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -L/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath-link,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-rpath,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2"
 include/config/auto.conf: FORCE
 endif
-ifneq "$(HOSTCC)" "gcc  -isystem/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/include -Og -g -feliminate-unused-debug-types -pipe -L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -L/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath-link,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath,/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2"
+ifneq "$(HOSTCC)" "gcc  -isystem/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/include -O2 -pipe -L/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -L/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath-link,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-rpath,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2"
 include/config/auto.conf: FORCE
 endif
 

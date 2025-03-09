@@ -1,3 +1,4 @@
+#include <dt-bindings/input/input.h>
 
 &soc {
 	/* Woorinet boot magic */
@@ -6,6 +7,13 @@
 			compatible = "qcom,msm-imem-cookie-woorinet-magic";
 			reg = <0x28 4>;
 		};
+	};
+
+	woorinet-button {
+		compatible = "woorinet-button";
+		factotry-reset-gpio = <&tlmm 32 0>;
+		linux,code = <KEY_VOLUMEUP>;
+		status = "okay";
 	};
 };
 

@@ -1,0 +1,1 @@
+cmd_usr/include/linux/efs_fs_sb.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/efs_fs_sb.h usr/include/linux/efs_fs_sb.h

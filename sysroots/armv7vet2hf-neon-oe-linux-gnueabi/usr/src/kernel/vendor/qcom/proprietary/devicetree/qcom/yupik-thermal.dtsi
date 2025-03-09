@@ -14,6 +14,8 @@
 		interrupt-names = "tsens-upper-lower",
 				"tsens-critical",
 				"tsens-0C";
+		nvmem-cells = <&tsens_chipinfo>;
+		nvmem-cell-names = "tsens_chipinfo";
 		#thermal-sensor-cells = <1>;
 	};
 
@@ -29,6 +31,8 @@
 		interrupt-names = "tsens-upper-lower",
 				"tsens-critical",
 				"tsens-0C";
+		nvmem-cells = <&tsens_chipinfo>;
+		nvmem-cell-names = "tsens_chipinfo";
 		#thermal-sensor-cells = <1>;
 	};
 
@@ -231,8 +235,9 @@
 
 	qcom,cpu-voltage-cdev {
 		compatible = "qcom,cc-cooling-devices";
-		apc1_cluster: qcom,apc1-cluster {
-			qcom,cpus = <&CPU4 &CPU7>;
+		apc1_cluster: thermal-cluster-4-7 {
+			qcom,cluster0 = <&CPU4 &CPU5 &CPU6>;
+			qcom,cluster1 = <&CPU7>;
 			#cooling-cells = <2>;
 		};
 	};

@@ -17,6 +17,11 @@
 #include <linux/of_platform.h>
 #include <linux/debugfs.h>
 #include "common.h"
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+#include <woorinet/bsudefs.h>
+#endif
+/* WOORINET STOP */
 
 static const char *const ep_type_names[] = {
 	[USB_ENDPOINT_XFER_CONTROL] = "ctrl",
@@ -124,8 +129,37 @@ static enum usb_dr_mode usb_get_dr_mode_from_string(const char *str)
 {
 	int ret;
 
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	enum usb_mode_type usbmode = wnet_get_usb_mode();
+	if (!usbmode)
+	{
+#endif
+/* WOORINT STOP */
 	ret = match_string(usb_dr_modes, ARRAY_SIZE(usb_dr_modes), str);
 	return (ret < 0) ? USB_DR_MODE_UNKNOWN : ret;
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	}
+	else
+	{
+		if (usbmode == USB_HOST)
+		{
+			ret = USB_DR_MODE_HOST;
+		}
+		else if (usbmode == USB_PERIPHERAL)
+		{
+			ret = USB_DR_MODE_HOST;
+		}
+		else
+		{
+			ret = USB_DR_MODE_OTG;
+		}
+		pr_err("Woorinet changed USB mode to %s", usb_dr_modes[ret]);
+	}
+	return ret;
+#endif
+/* WOORINT STOP */
 }
 
 enum usb_dr_mode usb_get_dr_mode(struct device *dev)

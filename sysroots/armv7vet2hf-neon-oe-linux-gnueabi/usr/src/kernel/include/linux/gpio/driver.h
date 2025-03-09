@@ -353,6 +353,14 @@ struct gpio_chip {
 						unsigned offset);
 	int			(*direction_output)(struct gpio_chip *chip,
 						unsigned offset, int value);
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	int			(*pull_up)(struct gpio_chip *chip,
+						unsigned offset);
+	int			(*pull_down)(struct gpio_chip *chip,
+						unsigned offset);
+#endif
+/* WOORINET STOP */
 	int			(*get)(struct gpio_chip *chip,
 						unsigned offset);
 	int			(*get_multiple)(struct gpio_chip *chip,

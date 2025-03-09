@@ -1,0 +1,1 @@
+cmd_usr/include/rdma/mlx5-abi.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/rdma/mlx5-abi.h usr/include/rdma/mlx5-abi.h

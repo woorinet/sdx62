@@ -40,6 +40,12 @@ struct bs_usb_interface_info {
   uint16        mask;
 };
 
+/* 4EE7 : # DESCRIPTION: ADB */
+static struct bs_usb_interface_info usb_interface_4EE7[] =
+{
+  {0X4EE7, 1, 0, "ffs.adb",            BS_USB_DIS_BITMASK_ADB },
+};
+
 /* 901D : # DESCRIPTION: DIAG + ADB */
 static struct bs_usb_interface_info usb_interface_901D[] =
 {
@@ -255,7 +261,7 @@ static struct bs_usb_interface_info usb_interface_90A9[] =
   {0X90A9, 1, 1, "ffs.adb",            BS_USB_DIS_BITMASK_ADB },
   {0X90A9, 1, 2, "cser.dun.0",         BS_USB_DIS_BITMASK_MODEM },
   {0X90A9, 1, 3, "cser.nmea.1",        BS_USB_DIS_BITMASK_NMEA },
-  {0X90A9, 1, 4, "qdss.qdss",          BS_USB_DIS_BITMASK_QDSS },
+  {0X90A9, 1, 4, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS_MDM },
   {0X90A9, 1, 5, "gsi.rmnet",          BS_USB_DIS_BITMASK_RMNET0 },
   {0X90A9, 2, 0, "gsi.ecm",            BS_USB_DIS_BITMASK_ECM },
   {0X90A9, 2, 1, "gsi.ecm",            BS_USB_DIS_BITMASK_ECM },
@@ -362,7 +368,7 @@ static struct bs_usb_interface_info usb_interface_90DB[] =
   {0X90DB, 1, 1, "cser.dun.0",         BS_USB_DIS_BITMASK_MODEM },
   {0X90DB, 1, 2, "gsi.rmnet",          BS_USB_DIS_BITMASK_RMNET0 },
   {0X90DB, 1, 3, "gsi.dpl",            BS_USB_DIS_BITMASK_DPL },
-  {0X90DB, 1, 4, "qdss.qdss",          BS_USB_DIS_BITMASK_QDSS },
+  {0X90DB, 1, 4, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS_MDM },
   {0X90DB, 1, 5, "ffs.adb",            BS_USB_DIS_BITMASK_ADB },
 };
 
@@ -378,9 +384,9 @@ static struct bs_usb_interface_info usb_interface_90E2[] =
 static struct bs_usb_interface_info usb_interface_90E5[] =
 {
   {0X90E5, 1, 0, "ffs.diag",           BS_USB_DIS_BITMASK_DIAG },
-  {0X90E5, 1, 1, "diag.diag_mdm",      BS_USB_DIS_BITMASK_DIAG },
+  {0X90E5, 1, 1, "diag.diag_mdm",      BS_USB_DIS_BITMASK_DIAG_MDM },
   {0X90E5, 1, 2, "qdss.qdss",          BS_USB_DIS_BITMASK_QDSS },
-  {0X90E5, 1, 3, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS },
+  {0X90E5, 1, 3, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS_MDM },
   {0X90E5, 1, 4, "cser.dun.0",         BS_USB_DIS_BITMASK_MODEM },
   {0X90E5, 1, 5, "gsi.dpl",            BS_USB_DIS_BITMASK_DPL },
   {0X90E5, 1, 6, "gsi.rmnet",          BS_USB_DIS_BITMASK_RMNET0 },
@@ -393,9 +399,9 @@ static struct bs_usb_interface_info usb_interface_90E7[] =
   {0X90E7, 1, 0, "gsi.rndis",          BS_USB_DIS_BITMASK_RNDIS },
   {0X90E7, 1, 1, "gsi.rndis",          BS_USB_DIS_BITMASK_RNDIS },
   {0X90E7, 1, 2, "ffs.diag",           BS_USB_DIS_BITMASK_DIAG },
-  {0X90E7, 1, 3, "diag.diag_mdm",      BS_USB_DIS_BITMASK_DIAG },
+  {0X90E7, 1, 3, "diag.diag_mdm",      BS_USB_DIS_BITMASK_DIAG_MDM },
   {0X90E7, 1, 4, "qdss.qdss",          BS_USB_DIS_BITMASK_QDSS },
-  {0X90E7, 1, 5, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS },
+  {0X90E7, 1, 5, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS_MDM },
   {0X90E7, 1, 6, "cser.dun.0",         BS_USB_DIS_BITMASK_MODEM },
   {0X90E7, 1, 7, "gsi.dpl",            BS_USB_DIS_BITMASK_DPL },
   {0X90E7, 1, 8, "ffs.adb",            BS_USB_DIS_BITMASK_ADB },
@@ -429,7 +435,7 @@ static struct bs_usb_interface_info usb_interface_90FC[] =
   {0X90FC, 1, 1, "cser.dun.0",         BS_USB_DIS_BITMASK_MODEM },
   {0X90FC, 1, 2, "gsi.rmnet",          BS_USB_DIS_BITMASK_RMNET0 },
   {0X90FC, 1, 3, "gsi.dpl",            BS_USB_DIS_BITMASK_DPL },
-  {0X90FC, 1, 4, "qdss.qdss",          BS_USB_DIS_BITMASK_QDSS },
+  {0X90FC, 1, 4, "qdss.qdss_mdm",      BS_USB_DIS_BITMASK_QDSS_MDM },
   {0X90FC, 1, 5, "ffs.adb",            BS_USB_DIS_BITMASK_ADB },
 };
 /* F000 : # DESCRIPTION: Mass Storage */
@@ -466,6 +472,10 @@ static inline boolean bs_usb_interface_get(
 
   switch (pid)
   {
+  case 0x4EE7:
+    *bs_usb_interface = &usb_interface_4EE7[0];
+    *arraysz = ARRAY_SIZE(usb_interface_4EE7);
+    break;
   case 0x901D:
     *bs_usb_interface = &usb_interface_901D[0];
     *arraysz = ARRAY_SIZE(usb_interface_901D);

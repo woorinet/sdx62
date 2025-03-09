@@ -31,6 +31,11 @@
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/wait.h>
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+#include <woorinet/bsudefs.h>
+#endif
+/* WOORINET STOP */
 
 #define UART_MR1			0x0000
 
@@ -602,6 +607,9 @@ static void msm_start_rx_dma(struct msm_port *msm_port)
 	struct uart_port *uart = &msm_port->uart;
 	u32 val;
 	int ret;
+
+	if (IS_ENABLED(CONFIG_CONSOLE_POLL))
+		return;
 
 	if (!dma->chan)
 		return;
@@ -1590,6 +1598,7 @@ static inline struct uart_port *msm_get_port_from_line(unsigned int line)
 static void __msm_console_write(struct uart_port *port, const char *s,
 				unsigned int count, bool is_uartdm)
 {
+	unsigned long flags;
 	int i;
 	int num_newlines = 0;
 	bool replaced = false;
@@ -1606,6 +1615,8 @@ static void __msm_console_write(struct uart_port *port, const char *s,
 		if (s[i] == '\n')
 			num_newlines++;
 	count += num_newlines;
+
+	local_irq_save(flags);
 
 	if (port->sysrq)
 		locked = 0;
@@ -1652,6 +1663,8 @@ static void __msm_console_write(struct uart_port *port, const char *s,
 
 	if (locked)
 		spin_unlock(&port->lock);
+
+	local_irq_restore(flags);
 }
 
 static void msm_console_write(struct console *co, const char *s,
@@ -1779,6 +1792,12 @@ static int msm_serial_probe(struct platform_device *pdev)
 	const struct of_device_id *id;
 	int irq, line;
 	bool flag = false;
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	uint32 blsp_num = 0;
+	int ret;
+#endif
+/* WOORINET STOP */
 
 	if (pdev->dev.of_node)
 		line = of_alias_get_id(pdev->dev.of_node, "serial");
@@ -1793,6 +1812,21 @@ static int msm_serial_probe(struct platform_device *pdev)
 	if (unlikely(line < 0 || line >= UART_NR))
 		return -ENXIO;
 
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	ret = of_property_read_u32(pdev->dev.of_node, "wnet,blsp-number", &blsp_num);
+	if ( ret == 0)
+	{
+		boolean debuguart = FALSE;
+		dev_info(&pdev->dev, "wnet,blsp-number = %d",blsp_num);
+		line = (int)blsp_num;
+		if (bs_debuguart_get(&debuguart) && debuguart)
+		{
+			line = 0;
+		}
+	}
+#endif
+/* WOORINET STOP */
 	dev_info(&pdev->dev, "msm_serial: detected port #%d\n", line);
 
 	port = msm_get_port_from_line(line);
@@ -1843,6 +1877,17 @@ static int msm_serial_probe(struct platform_device *pdev)
 	port->irq = irq;
 
 	platform_set_drvdata(pdev, port);
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+  {
+    boolean debuguart = FALSE;
+    if (!bs_debuguart_get(&debuguart) || !debuguart)
+    {
+      msm_uart_driver.cons = NULL;
+    }
+  }
+#endif
+/* WOORINET STOP */
 
 	return uart_add_one_port(&msm_uart_driver, port);
 }

@@ -1,0 +1,10 @@
+qcom-ipq4019-ap.dk04.1-c1.o: \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-ipq4019-ap.dk04.1-c1.dts \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-ipq4019-ap.dk04.1.dtsi \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-ipq4019.dtsi \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/clock/qcom,gcc-ipq4019.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/interrupt-controller/arm-gic.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/interrupt-controller/irq.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/input/input.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/input/linux-event-codes.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/gpio/gpio.h

@@ -32,4 +32,20 @@ struct aa_carrier_version_s
   const char *aa_version_tag;
 };
 
+/************
+ *
+ * Name:     aa_qualified_version_s
+ *
+ * Purpose:  carrier version
+ *
+ * Notes:    aa_carrier       - carrier name
+ *           aa_build_tag     - qualified version
+ *
+ ************/
+struct aa_qualified_version_s
+{
+  const char *aa_carrier;
+  const char *aa_version;
+};
+
 #include "aaiproto.h"

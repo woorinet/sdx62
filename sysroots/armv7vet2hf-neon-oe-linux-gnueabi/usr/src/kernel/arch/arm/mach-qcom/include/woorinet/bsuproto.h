@@ -24,5 +24,12 @@ extern boolean bs_usbcomp_get(
   uint32 *usb_comp);
 extern boolean bs_carrier_pointer_get(
   char **strpp);
-
+extern boolean bs_debuguart_get(
+  boolean *debuguart);
+extern boolean bs_rndis_mac_addr_get(
+  char *host_addr);
+extern boolean bs_rndis_mac_addr_set(
+  char *host_addr);
+extern uint32 bs_hwid_get(
+  void);
 #endif /* BSUPROTO_H */

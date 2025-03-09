@@ -178,25 +178,59 @@ int ipa_nat_del_ipv4_rule(
  * To retrieve the timestamp that lastly the
  * nat rule was accessed
  *
- * Returns:	0  On Success, negative on failure
+ * Returns:     0  On Success, negative on failure
  */
 int ipa_nat_query_timestamp(
 	uint32_t tbl_hdl,
 	uint32_t rule_hdl,
 	uint32_t *time_stamp)
 {
+	int redirect = 0;
+
 	if ( ! VALID_TBL_HDL(tbl_hdl) ||
-		 ! VALID_RULE_HDL(rule_hdl) ||
-		 time_stamp == NULL )
+		! VALID_RULE_HDL(rule_hdl) ||
+		time_stamp == NULL)
 	{
 		IPAERR("Invalid parameters passed tbl_hdl=0x%x rule_hdl=%u time_stamp=%pK\n",
-			   tbl_hdl, rule_hdl, time_stamp);
+				tbl_hdl, rule_hdl, time_stamp);
 		return -EINVAL;
 	}
 
 	IPADBG("Passed Table 0x%x and rule handle %u\n", tbl_hdl, rule_hdl);
 
-	return ipa_nati_query_timestamp(tbl_hdl, rule_hdl, time_stamp);
+	return ipa_nati_query_timestamp_redirect(tbl_hdl, rule_hdl, time_stamp, &redirect);
+}
+
+/**
+ * ipa_nat_query_timestamp_redirect() - to query timestamp and redirect flag
+ * @table_handle: [in] handle of ipv4 nat table
+ * @rule_handle: [in] ipv4 nat rule handle
+ * @time_stamp: [out] time stamp of rule
+ * @redirect: [out] redirect flag of rule
+ *
+ * To retrieve the timestamp that lastly the
+ * nat rule was accessed and nat entry redirect flag
+ *
+ * Returns:	0  On Success, negative on failure
+ */
+int ipa_nat_query_timestamp_redirect(
+	uint32_t tbl_hdl,
+	uint32_t rule_hdl,
+	uint32_t *time_stamp,
+	uint32_t *redirect)
+{
+	if ( ! VALID_TBL_HDL(tbl_hdl) ||
+		 ! VALID_RULE_HDL(rule_hdl) ||
+		 time_stamp == NULL || redirect == NULL)
+	{
+		IPAERR("Invalid parameters passed tbl_hdl=0x%x rule_hdl=%u time_stamp=%pK redirect=%pK\n",
+			   tbl_hdl, rule_hdl, time_stamp, redirect);
+		return -EINVAL;
+	}
+
+	IPADBG("Passed Table 0x%x and rule handle %u\n", tbl_hdl, rule_hdl);
+
+	return ipa_nati_query_timestamp_redirect(tbl_hdl, rule_hdl, time_stamp, redirect);
 }
 
 /**
@@ -224,7 +258,7 @@ int ipa_nat_modify_pdn(
 		return -EINVAL;
 	}
 
-	if (pdn_index > IPA_MAX_PDN_NUM) {
+	if (pdn_index >= IPA_MAX_PDN_NUM) {
 		IPAERR(
 			"PDN index %d is out of range maximum %d",
 			pdn_index, IPA_MAX_PDN_NUM);
@@ -322,7 +356,7 @@ int ipa_nat_get_pdn_count(
 int ipa_nat_dealloc_pdn(
 	uint8_t pdn_index)
 {
-	if(pdn_index > IPA_MAX_PDN_NUM) {
+	if(pdn_index >= IPA_MAX_PDN_NUM) {
 		IPAERR("PDN index is out of range %d", pdn_index);
 		return -EINVAL;
 	}

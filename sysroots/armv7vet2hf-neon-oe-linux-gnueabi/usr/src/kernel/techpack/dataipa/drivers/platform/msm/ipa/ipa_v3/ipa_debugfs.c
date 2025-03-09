@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifdef CONFIG_DEBUG_FS
@@ -99,6 +100,11 @@ const char *ipa3_event_name[IPA_EVENT_MAX_NUM] = {
 	__stringify(IPA_EoGRE_UP_EVENT),
 	__stringify(IPA_EoGRE_DOWN_EVENT),
 	__stringify(IPA_IPPT_SW_FLT_EVENT),
+	__stringify(IPA_MACSEC_ADD_EVENT),
+	__stringify(IPA_MACSEC_DEL_EVENT),
+	__stringify(IPA_DONE_RESTORE_EVENT),
+	__stringify(IPA_SET_EXT_ROUTER_MODE_EVENT),
+	__stringify(IPA_ENABLE_ETH_PDU_MODE_EVENT),
 };
 
 const char *ipa3_hdr_l2_type_name[] = {
@@ -122,6 +128,9 @@ const char *ipa3_hdr_proc_type_name[] = {
 	__stringify(IPA_HDR_PROC_SET_DSCP),
 	__stringify(IPA_HDR_PROC_EoGRE_HEADER_ADD),
 	__stringify(IPA_HDR_PROC_EoGRE_HEADER_REMOVE),
+	__stringify(IPA_HDR_PROC_WWAN_TO_ETHII_EX),
+	__stringify(IPA_HDR_PROC_GRE_HEADER_ADD),
+	__stringify(IPA_HDR_PROC_GRE_HEADER_REMOVE),
 };
 
 static struct dentry *dent;
@@ -386,6 +395,7 @@ int _ipa_read_ep_reg_v3_0(char *buf, int max_len, int pipe)
  */
 int _ipa_read_ep_reg_v4_0(char *buf, int max_len, int pipe)
 {
+	IPADBG("ucp_cfg_%d value =%x max_len:%d, pipe:%d\n",pipe,ipahal_read_reg_n(IPA_ENDP_INIT_UCP_CFG_n, pipe),max_len,pipe);
 	return scnprintf(
 		dbg_buff, IPA_MAX_MSG_LEN,
 		"IPA_ENDP_INIT_NAT_%u=0x%x\n"
@@ -399,6 +409,7 @@ int _ipa_read_ep_reg_v4_0(char *buf, int max_len, int pipe)
 		"IPA_ENDP_INIT_HOL_TIMER_%u=0x%x\n"
 		"IPA_ENDP_INIT_DEAGGR_%u=0x%x\n"
 		"IPA_ENDP_INIT_CFG_%u=0x%x\n",
+		"IPA_ENDP_INIT_UCP_CFG_%u=0x%x\n",
 		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_NAT_n, pipe),
 		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_CONN_TRACK_n, pipe),
 		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_HDR_n, pipe),
@@ -409,7 +420,8 @@ int _ipa_read_ep_reg_v4_0(char *buf, int max_len, int pipe)
 		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_HOL_BLOCK_EN_n, pipe),
 		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_HOL_BLOCK_TIMER_n, pipe),
 		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_DEAGGR_n, pipe),
-		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_CFG_n, pipe));
+		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_CFG_n, pipe),
+		pipe, ipahal_read_reg_n(IPA_ENDP_INIT_UCP_CFG_n, pipe));
 }
 
 static ssize_t ipa3_read_ep_reg(struct file *file, char __user *ubuf,
@@ -1282,6 +1294,27 @@ static ssize_t ipa3_read_proc_ctx(struct file *file, char __user *ubuf,
 			entry->id,
 			ipa3_hdr_proc_type_name[entry->type],
 			ofst_words);
+		if (entry->type == IPA_HDR_PROC_ETHII_TO_ETHII_EX) {
+			nbytes += scnprintf(dbg_buff + nbytes,
+				IPA_MAX_MSG_LEN - nbytes,
+				"input_ethhdr_negative_offset:%u\n"
+				"output_ethhdr_negative_offset:%u\n"
+				"output_dscp_pcp_update:%u\n",
+				entry->generic_params.input_ethhdr_negative_offset,
+				entry->generic_params.output_ethhdr_negative_offset,
+				entry->generic_params.output_dscp_pcp_update);
+		} else if (entry->type ==  IPA_HDR_PROC_WWAN_TO_ETHII_EX) {
+			nbytes += scnprintf(dbg_buff + nbytes,
+				IPA_MAX_MSG_LEN - nbytes,
+				"input_ethhdr_negative_offset:%u\n"
+				"output_ethhdr_negative_offset:%u\n"
+				"output_dscp_pcp_update:%u\n"
+				"input_ethhdr_valid:%u\n",
+				entry->generic_params_v2.input_ethhdr_negative_offset,
+				entry->generic_params_v2.output_ethhdr_negative_offset,
+				entry->generic_params_v2.output_dscp_pcp_update,
+				entry->generic_params_v2.input_ethhdr_valid);
+		}
 		nbytes += scnprintf(dbg_buff + nbytes,
 			IPA_MAX_MSG_LEN - nbytes,
 			"hdr[words]:%u\n",
@@ -1585,6 +1618,11 @@ static ssize_t ipa3_read_odlstats(struct file *file, char __user *ubuf,
 	int nbytes;
 	int cnt = 0;
 
+	if (!ipa3_odl_ctx) {
+                IPADBG("ODL stats not supported\n");
+                return 0;
+	}
+
 	nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
 			"ODL received pkt =%u\n"
 			"ODL processed pkt to DIAG=%u\n"
@@ -1611,15 +1649,23 @@ static ssize_t ipa3_read_page_recycle_stats(struct file *file,
 			"COAL : Total number of packets replenished =%llu\n"
 			"COAL : Number of page recycled packets  =%llu\n"
 			"COAL : Number of tmp alloc packets  =%llu\n"
+			"COAL  : Number of times tasklet scheduled  =%llu\n"
 			"DEF  : Total number of packets replenished =%llu\n"
 			"DEF  : Number of page recycled packets =%llu\n"
-			"DEF  : Number of tmp alloc packets  =%llu\n",
+			"DEF  : Number of tmp alloc packets  =%llu\n"
+			"DEF  : Number of times tasklet scheduled  =%llu\n"
+			"COMMON  : Number of page recycled in tasklet  =%llu\n"
+			"COMMON  : Number of times free pages not found in tasklet =%llu\n",
 			ipa3_ctx->stats.page_recycle_stats[0].total_replenished,
 			ipa3_ctx->stats.page_recycle_stats[0].page_recycled,
 			ipa3_ctx->stats.page_recycle_stats[0].tmp_alloc,
+			ipa3_ctx->stats.num_sort_tasklet_sched[0],
 			ipa3_ctx->stats.page_recycle_stats[1].total_replenished,
 			ipa3_ctx->stats.page_recycle_stats[1].page_recycled,
-			ipa3_ctx->stats.page_recycle_stats[1].tmp_alloc);
+			ipa3_ctx->stats.page_recycle_stats[1].tmp_alloc,
+			ipa3_ctx->stats.num_sort_tasklet_sched[1],
+			ipa3_ctx->stats.page_recycle_cnt_in_tasklet,
+			ipa3_ctx->stats.num_of_times_wq_reschd);
 
 	cnt += nbytes;
 
@@ -1890,6 +1936,67 @@ static ssize_t ipa3_read_ntn(struct file *file, char __user *ubuf,
 	} else {
 		nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
 				"Fail to read NTN stats\n");
+		cnt += nbytes;
+	}
+
+	return simple_read_from_buffer(ubuf, count, ppos, dbg_buff, cnt);
+}
+
+static ssize_t ipa3_read_eogre_stats(struct file *file, char __user *ubuf,
+		size_t count, loff_t *ppos)
+{
+	int nbytes;
+	int cnt = 0;
+	struct Ipa3HwStatsMPLS stats;
+	struct Ipa3HwStatsEOGRE eogre;
+	struct Ipa3HwStatsMultiCombined multi;
+	if (!ipa3_get_eogre_stats(&stats, &eogre, &multi)) {
+
+		if(ipa3_ctx->eogre_tunnel_feature == UNTAG_FEATURE ||
+                  	ipa3_ctx->eogre_tunnel_feature == DEFAULT_FEATURE) {
+			nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"EoGRE UL Stats is %llu\n"
+				"EoGRE DL stats is %llu\n",
+				eogre.eogre_header_add_id,
+				eogre.eogre_header_remove_id);
+			cnt += nbytes;
+		}
+		if(ipa3_ctx->eogre_tunnel_feature == DOUBLE_TAG_FEATURE) {
+			nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"MPLS UL Stats is %llu\n"
+				"MPLS DL stats is %llu\n"
+				"PPPOEoMPLS UL Stats is %llu\n"
+				"PPPOEoMPLS DL Stats is %llu\n",
+				 stats.mpls_header_add_id,
+				 stats.mpls_header_remove_id,
+				 stats.pppoe_mpls_header_add_id,
+				 stats.pppoe_mpls_header_remove_id);
+			cnt += nbytes;
+		}
+		if(ipa3_ctx->eogre_tunnel_feature == SINGLE_TAG_FEATURE) {
+			nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"EoGRE UL Stats is %llu\n"
+				"EoGRE DL stats is %llu\n",
+				multi.eogre_header_add_id,
+				multi.eogre_header_remove_id);
+			cnt += nbytes;
+
+			for(int i = 0;i < MAX_MULTI_TUNNEL_STATS;i++) {
+				nbytes = scnprintf(dbg_buff + cnt,
+					IPA_MAX_MSG_LEN - cnt,
+					"Tunnel id %d\n"
+					"EoGRE UL Stats is %llu\n"
+					"EoGRE DL stats is %llu\n",
+					i,
+					multi.tunnels[i].eogre_header_add_id,
+					multi.tunnels[i].eogre_header_remove_id);
+				cnt += nbytes;
+			}
+
+		}
+	} else {
+		nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"Fail to read EOGRE stats\n");
 		cnt += nbytes;
 	}
 
@@ -2645,42 +2752,94 @@ static ssize_t ipa3_read_wdi3_gsi_stats(struct file *file,
 		goto done;
 	}
 	if (!ipa3_get_wdi3_gsi_stats(&stats)) {
-		nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
-			"TX ringFull=%u\n"
-			"TX ringEmpty=%u\n"
-			"TX ringUsageHigh=%u\n"
-			"TX ringUsageLow=%u\n"
-			"TX RingUtilCount=%u\n",
-			stats.u.ring[1].ringFull,
-			stats.u.ring[1].ringEmpty,
-			stats.u.ring[1].ringUsageHigh,
-			stats.u.ring[1].ringUsageLow,
-			stats.u.ring[1].RingUtilCount);
-		cnt += nbytes;
-		nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
-			"TX1 ringFull=%u\n"
-			"TX1 ringEmpty=%u\n"
-			"TX1 ringUsageHigh=%u\n"
-			"TX1 ringUsageLow=%u\n"
-			"TX1 RingUtilCount=%u\n",
-			stats.u.ring[2].ringFull,
-			stats.u.ring[2].ringEmpty,
-			stats.u.ring[2].ringUsageHigh,
-			stats.u.ring[2].ringUsageLow,
-			stats.u.ring[2].RingUtilCount);
-		cnt += nbytes;
-		nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
-			"RX ringFull=%u\n"
-			"RX ringEmpty=%u\n"
-			"RX ringUsageHigh=%u\n"
-			"RX ringUsageLow=%u\n"
-			"RX RingUtilCount=%u\n",
-			stats.u.ring[0].ringFull,
-			stats.u.ring[0].ringEmpty,
-			stats.u.ring[0].ringUsageHigh,
-			stats.u.ring[0].ringUsageLow,
-			stats.u.ring[0].RingUtilCount);
-		cnt += nbytes;
+		if (ipa3_ctx->is_dual_pine_config) {
+			nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"Pine_5G/6G TX ringFull=%u\n"
+				"Pine_5G/6G TX ringEmpty=%u\n"
+				"Pine_5G/6G TX ringUsageHigh=%u\n"
+				"Pine_5G/6G TX ringUsageLow=%u\n"
+				"Pine_5G/6G TX RingUtilCount=%u\n",
+				stats.u.ring[1].ringFull,
+				stats.u.ring[1].ringEmpty,
+				stats.u.ring[1].ringUsageHigh,
+				stats.u.ring[1].ringUsageLow,
+				stats.u.ring[1].RingUtilCount);
+				cnt += nbytes;
+				nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
+				"Pine_2G TX ringFull=%u\n"
+				"Pine_2G TX ringEmpty=%u\n"
+				"Pine_2G TX ringUsageHigh=%u\n"
+				"Pine_2G TX ringUsageLow=%u\n"
+				"Pine_2G TX RingUtilCount=%u\n",
+				stats.u.ring[2].ringFull,
+				stats.u.ring[2].ringEmpty,
+				stats.u.ring[2].ringUsageHigh,
+				stats.u.ring[2].ringUsageLow,
+				stats.u.ring[2].RingUtilCount);
+			cnt += nbytes;
+			nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
+				"Pine_5G/6G RX ringFull=%u\n"
+				"Pine_5G/6G RX ringEmpty=%u\n"
+				"Pine_5G/6G RX ringUsageHigh=%u\n"
+				"Pine_5G/6G RX ringUsageLow=%u\n"
+				"Pine_5G/6G RX RingUtilCount=%u\n",
+				stats.u.ring[0].ringFull,
+				stats.u.ring[0].ringEmpty,
+				stats.u.ring[0].ringUsageHigh,
+				stats.u.ring[0].ringUsageLow,
+				stats.u.ring[0].RingUtilCount);
+			cnt += nbytes;
+			nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
+				"Pine_2G RX ringFull=%u\n"
+				"Pine_2G RX ringEmpty=%u\n"
+				"Pine_2G RX ringUsageHigh=%u\n"
+				"Pine_2G RX ringUsageLow=%u\n"
+				"Pine_2G RX RingUtilCount=%u\n",
+				stats.u.ring[3].ringFull,
+				stats.u.ring[3].ringEmpty,
+				stats.u.ring[3].ringUsageHigh,
+				stats.u.ring[3].ringUsageLow,
+				stats.u.ring[3].RingUtilCount);
+			cnt += nbytes;
+		}
+		else {
+			nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"TX ringFull=%u\n"
+				"TX ringEmpty=%u\n"
+				"TX ringUsageHigh=%u\n"
+				"TX ringUsageLow=%u\n"
+				"TX RingUtilCount=%u\n",
+				stats.u.ring[1].ringFull,
+				stats.u.ring[1].ringEmpty,
+				stats.u.ring[1].ringUsageHigh,
+				stats.u.ring[1].ringUsageLow,
+				stats.u.ring[1].RingUtilCount);
+			cnt += nbytes;
+			nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
+				"TX1 ringFull=%u\n"
+				"TX1 ringEmpty=%u\n"
+				"TX1 ringUsageHigh=%u\n"
+				"TX1 ringUsageLow=%u\n"
+				"TX1 RingUtilCount=%u\n",
+				stats.u.ring[2].ringFull,
+				stats.u.ring[2].ringEmpty,
+				stats.u.ring[2].ringUsageHigh,
+				stats.u.ring[2].ringUsageLow,
+				stats.u.ring[2].RingUtilCount);
+			cnt += nbytes;
+			nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
+				"RX ringFull=%u\n"
+				"RX ringEmpty=%u\n"
+				"RX ringUsageHigh=%u\n"
+				"RX ringUsageLow=%u\n"
+				"RX RingUtilCount=%u\n",
+				stats.u.ring[0].ringFull,
+				stats.u.ring[0].ringEmpty,
+				stats.u.ring[0].ringUsageHigh,
+				stats.u.ring[0].ringUsageLow,
+				stats.u.ring[0].RingUtilCount);
+			cnt += nbytes;
+		}
 	} else {
 		nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
 				"Fail to read WDI GSI stats\n");
@@ -2998,7 +3157,7 @@ static ssize_t ipa3_enable_ipc_low(struct file *file,
 		if (!ipa_ipc_low_buff) {
 			ipa_ipc_low_buff =
 				ipc_log_context_create(IPA_IPC_LOG_PAGES,
-					"ipa_low", 0);
+					"ipa_low", MINIDUMP_MASK);
 		}
 			if (ipa_ipc_low_buff == NULL)
 				IPADBG("failed to get logbuf_low\n");
@@ -3007,6 +3166,94 @@ static ssize_t ipa3_enable_ipc_low(struct file *file,
 		ipa3_ctx->logbuf_low = NULL;
 	}
 	mutex_unlock(&ipa3_ctx->lock);
+
+	return count;
+}
+
+static ssize_t ipa3_read_ipa_max_napi_sort_page_thrshld(struct file *file,
+	char __user *buf, size_t count, loff_t *ppos) {
+
+	int nbytes;
+	nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"page max napi without free page = %d\n",
+				ipa3_ctx->ipa_max_napi_sort_page_thrshld);
+	return simple_read_from_buffer(buf, count, ppos, dbg_buff, nbytes);
+
+}
+
+static ssize_t ipa3_read_ipa_dscp_pcp_mapping_cache(struct file *file,
+	char __user *buf, size_t count, loff_t *ppos) {
+
+	int nbytes, i;
+	int cnt = 0;
+
+	if (ipa3_ctx->dscp_pcp_map_info_cache.add) {
+		nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"DSCP PCP Mapping present in uc\n |DSCP| - |PCP|\n");
+		cnt += nbytes;
+
+		for (i = 0; i < IPA_UC_MAX_DSCP_VAL; i++) {
+			nbytes = scnprintf(dbg_buff + cnt, IPA_MAX_MSG_LEN - cnt,
+				"%3d   -   %d\n", i, ipa3_ctx->dscp_pcp_map_info_cache.dscp_pcp_map[i]);
+			cnt += nbytes;
+		}
+	} else {
+		nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"DSCP PCP Mapping not present in uc\n");
+		cnt += nbytes;
+	}
+
+	return simple_read_from_buffer(buf, count, ppos, dbg_buff, cnt);
+
+}
+
+static ssize_t ipa3_write_ipa_max_napi_sort_page_thrshld(struct file *file,
+	const char __user *buf, size_t count, loff_t *ppos) {
+
+	int ret;
+	u8 ipa_max_napi_sort_page_thrshld = 0;
+
+	if (count >= sizeof(dbg_buff))
+		return -EFAULT;
+
+	ret = kstrtou8_from_user(buf, count, 0, &ipa_max_napi_sort_page_thrshld);
+	if(ret)
+		return ret;
+
+	ipa3_ctx->ipa_max_napi_sort_page_thrshld = ipa_max_napi_sort_page_thrshld;
+
+	IPADBG("napi cnt without prealloc pages = %d", ipa3_ctx->ipa_max_napi_sort_page_thrshld);
+
+	return count;
+}
+
+static ssize_t ipa3_read_page_wq_reschd_time(struct file *file,
+	char __user *buf, size_t count, loff_t *ppos) {
+
+	int nbytes;
+	nbytes = scnprintf(dbg_buff, IPA_MAX_MSG_LEN,
+				"Page WQ reschduule time = %d\n",
+				ipa3_ctx->page_wq_reschd_time);
+	return simple_read_from_buffer(buf, count, ppos, dbg_buff, nbytes);
+
+}
+
+static ssize_t ipa3_write_page_wq_reschd_time(struct file *file,
+	const char __user *buf, size_t count, loff_t *ppos) {
+
+	int ret;
+	u8 page_wq_reschd_time = 0;
+
+	if (count >= sizeof(dbg_buff))
+		return -EFAULT;
+
+	ret = kstrtou8_from_user(buf, count, 0, &page_wq_reschd_time);
+	if(ret)
+		return ret;
+
+	ipa3_ctx->page_wq_reschd_time = page_wq_reschd_time;
+
+	IPADBG("Updated page WQ reschedule time = %d", ipa3_ctx->page_wq_reschd_time);
 
 	return count;
 }
@@ -3109,6 +3356,26 @@ static ssize_t ipa3_write_nat_table_move(struct file *file,
 	return count;
 }
 
+static ssize_t enable_wkup_logs(struct file *file,
+	const char __user *buf, size_t count, loff_t *ppos)
+{
+	s8 flg=0;
+	int ret;
+
+	ret = kstrtos8_from_user(buf, count, 0, &flg);
+
+	if(ret)
+		return ret;
+
+	if(flg){
+		ipa3_ctx->wkup_enable=1;
+	}
+	else{
+		ipa3_ctx->wkup_enable=0;
+	}
+
+	return count;
+}
 
 static const struct ipa3_debugfs_file debugfs_files[] = {
 	{
@@ -3239,6 +3506,10 @@ static const struct ipa3_debugfs_file debugfs_files[] = {
 			.read = ipa3_read_wdi,
 		}
 	}, {
+		"tunnel_stats", IPA_READ_ONLY_MODE, NULL, {
+			.read = ipa3_read_eogre_stats,
+		}
+	}, {
 		"ntn", IPA_READ_ONLY_MODE, NULL, {
 			.read = ipa3_read_ntn,
 		}
@@ -3316,7 +3587,25 @@ static const struct ipa3_debugfs_file debugfs_files[] = {
 		"move_nat_table_to_ddr", IPA_WRITE_ONLY_MODE, NULL,{
 			.write = ipa3_write_nat_table_move,
 		}
-	},
+	}, {
+		"page_wq_reschd_time", IPA_READ_WRITE_MODE, NULL, {
+			.read = ipa3_read_page_wq_reschd_time,
+			.write = ipa3_write_page_wq_reschd_time,
+		}
+	}, {
+		"ipa_max_napi_sort_page_thrshld", IPA_READ_WRITE_MODE, NULL, {
+			.read = ipa3_read_ipa_max_napi_sort_page_thrshld,
+			.write = ipa3_write_ipa_max_napi_sort_page_thrshld,
+		}
+	}, {
+		"ipa_dscp_pcp_mapping_cache", IPA_READ_ONLY_MODE, NULL, {
+			.read = ipa3_read_ipa_dscp_pcp_mapping_cache,
+		}
+	}, {
+		"enable_wkup_log", IPA_WRITE_ONLY_MODE,NULL, {
+			.write = enable_wkup_logs,
+		}
+	}
 };
 
 void ipa3_debugfs_init(void)

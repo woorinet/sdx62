@@ -33,6 +33,23 @@
 #define SMEM_IMAGE_VERSION_TABLE  469
 #endif
 
+/************
+ *
+ * Name:     usb_mode_type
+ *
+ * Purpose:  Woorinet USB mode
+ *
+ * Notes:    none
+ *
+ ************/
+enum usb_mode_type
+{
+  USB_NONE = 0,
+  USB_PERIPHERAL,
+  USB_HOST,
+  USB_OTG,
+};
+
 #include "wsmem.h"
 
 #include "bsuproto.h"

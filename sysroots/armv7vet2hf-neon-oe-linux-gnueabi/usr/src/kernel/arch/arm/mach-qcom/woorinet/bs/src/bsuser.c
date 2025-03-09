@@ -7,7 +7,10 @@
 #include <aaudefs.h>
 #include "bsidefs.h"
 
+#include <linux/etherdevice.h>
+
 static wsmem_bl_boot * wsmem_base = NULL;
+static uint8 rndis_mac_addr[6] = {0,};
 
 /************
  *
@@ -40,6 +43,49 @@ _global wsmem_bl_boot * bs_get_wsmem_addr(
   }
   return wsmem_base;
 }
+EXPORT_SYMBOL(bs_get_wsmem_addr);
+
+/************
+ *
+ * Name:    wnet_get_usb_mode()
+ *
+ * Purpose: return USB MODE in Woorinet Shared Memory
+ *
+ * Parms:   none
+ *
+ * Return:  enum usb_mode_type {
+ *            USB_NONE = 0,
+ *            USB_PERIPHERAL,
+ *            USB_HOST,
+ *            USB_OTG,
+ *          };
+ *
+ * Abort:   none
+ *
+ * Notes:
+ *
+ ************/
+
+enum usb_mode_type wnet_get_usb_mode(void)
+{
+  wsmem_bl_boot *wsmem_addr = NULL;
+  uint32 default_usb_mode = 0;
+
+  wsmem_addr = bs_get_wsmem_addr();
+  if (!wsmem_addr)
+  {
+    pr_err("%s: error getting WSMEM address x%x\n", __func__, wsmem_addr);
+    default_usb_mode = 0;
+  }
+  else
+  {
+    default_usb_mode = (wsmem_addr->feature[0] & (WNET_FEAT1_MASK_USB_MODE_BIT0|WNET_FEAT1_MASK_USB_MODE_BIT1));
+    default_usb_mode = (default_usb_mode>>3);
+  }
+
+  return default_usb_mode;
+}
+EXPORT_SYMBOL(wnet_get_usb_mode);
 
 /************
  *
@@ -75,6 +121,7 @@ _global boolean bs_customer_get(
   }
   return FALSE;
 }
+EXPORT_SYMBOL(bs_customer_get);
 
 /************
  *
@@ -117,6 +164,37 @@ _global boolean bs_feature_get(
 
   return result;
 }
+EXPORT_SYMBOL(bs_feature_get);
+
+/************
+ *
+ * Name:     bs_hwid_get
+ *
+ * Purpose:  To get value of hwid
+ *
+ * Parms:    None
+ *
+ * Return:   uint32 value of hwid
+ *
+ * Abort:    none
+ *
+ ************/
+_global uint32 bs_hwid_get(
+  void)
+{
+  boolean result = FALSE;
+  wsmem_bl_boot * wsmem_addr = NULL;
+
+  wsmem_addr = bs_get_wsmem_addr();
+  if (!wsmem_addr)
+  {
+    WOORINET_PRINT(WOORINET_ERROR, "Failed smem_get_addr() SMEM_ID_VENDOR0");
+    return (uint32)0x40;
+  }
+
+  return wsmem_addr->hwid;
+}
+EXPORT_SYMBOL(bs_hwid_get);
 
 /************
  *
@@ -169,11 +247,12 @@ _global boolean bs_firmware_version_set(
   apps_version_p->image_colon_sep1[0] = COLON_SEP;
   apps_version_p->image_colon_sep2[0] = COLON_SEP;
 
-  snprintf(apps_version_p->image_qc_version_string, IMAGE_OEM_VERSION_STRING_LENGTH, "%s", aa_git_qti_apps_version_get());
+  snprintf(apps_version_p->image_qc_version_string, IMAGE_QC_VERSION_STRING_LENGTH, "%s", aa_git_qti_apps_version_get());
   snprintf(apps_version_p->image_oem_version_string, IMAGE_OEM_VERSION_STRING_LENGTH, "OS.%s %s %s", aa_build_tag_get(carrier), (const char *)UTS_RELEASE, aa_build_machine_get());
 
   return TRUE;
 }
+EXPORT_SYMBOL(bs_firmware_version_set);
 
 /************
  *
@@ -210,6 +289,7 @@ _global void bs_woorinet_magic_clr(
     }
   }
 }
+EXPORT_SYMBOL(bs_woorinet_magic_clr);
 
 /************
  *
@@ -246,6 +326,7 @@ _global void bs_woorinet_magic_set(
     }
   }
 }
+EXPORT_SYMBOL(bs_woorinet_magic_set);
 
 /************
  *
@@ -283,6 +364,7 @@ _global boolean bs_usbcomp_get(
 
   return TRUE;
 }
+EXPORT_SYMBOL(bs_usbcomp_get);
 
 /************
  *
@@ -316,4 +398,147 @@ _global boolean bs_carrier_pointer_get(
 
   return TRUE;
 }
+EXPORT_SYMBOL(bs_carrier_pointer_get);
+
+/************
+ *
+ * Name:     bs_debuguart_get
+ *
+ * Purpose:  get debuguart
+ *
+ * Parms:    boolean debuguart
+ *
+ * Return:   True - no error
+ *
+ * Abort:    none
+ *
+ * Notes:
+ *
+ ************/
+_global boolean bs_debuguart_get(
+  boolean *debuguart)
+{
+  wsmem_bl_boot * wsmem_addr = NULL;
+
+   wsmem_addr = bs_get_wsmem_addr();
+  if (!wsmem_addr)
+  {
+    WOORINET_PRINT(WOORINET_ERROR, "Failed smem_get_addr() SMEM_ID_VENDOR0");
+    return FALSE;
+  }
+  *debuguart = (wsmem_addr->debug_uart) ? TRUE:FALSE;
+
+  return TRUE;
+}
+EXPORT_SYMBOL(bs_debuguart_get);
+
+
+/************
+ *
+ * Name:     bs_rndis_mac_addr_get
+ *
+ * Purpose:  Returns RNDIS MAC Address
+ *
+ * Parms:    (out) host_addr - pointer to mac address string
+ *
+ * Return:   TRUE - OK
+ *
+ * Abort:    none
+ *
+ ************/
+_global boolean bs_rndis_mac_addr_get(
+  char *host_addr)
+{
+  wsmem_bl_boot * wsmem_addr = NULL;
+  uint8 * macaddr = NULL;
+
+  wsmem_addr = bs_get_wsmem_addr();
+  if (!wsmem_addr)
+  {
+    WOORINET_PRINT(WOORINET_ERROR, "Failed smem_get_addr() SMEM_ID_VENDOR0");
+    return FALSE;
+  }
+  if (!wsmem_addr)
+  {
+    return FALSE;
+  }
+  macaddr = is_valid_ether_addr(rndis_mac_addr) ? rndis_mac_addr : wsmem_addr->rndis_mac;
+  sprintf(host_addr, "%02X:%02X:%02X:%02X:%02X:%02X",
+                     macaddr[0],
+                     macaddr[1],
+                     macaddr[2],
+                     macaddr[3],
+                     macaddr[4],
+                     macaddr[5]);
+  WOORINET_PRINTF(WOORINET_MED, "%s", host_addr);
+  return TRUE;
+}
+EXPORT_SYMBOL(bs_rndis_mac_addr_get);
+
+/************
+ *
+ * Name:     bs_rndis_mac_addr_set
+ *
+ * Purpose:  Set RNDIS MAC Address temporarily
+ *
+ * Parms:    (in) host_addr - pointer to mac address string
+ *
+ * Return:   TRUE - OK
+ *
+ * Abort:    none
+ *
+ ************/
+_global boolean bs_rndis_mac_addr_set(
+  char *host_addr)
+{
+  wsmem_bl_boot * wsmem_addr = NULL;
+
+  wsmem_addr = bs_get_wsmem_addr();
+  if (!wsmem_addr)
+  {
+    WOORINET_PRINT(WOORINET_ERROR, "Failed smem_get_addr() SMEM_ID_VENDOR0");
+    return FALSE;
+  }
+  if (!wsmem_addr)
+  {
+    return FALSE;
+  }
+
+  if (host_addr)
+  {
+    unsigned int i;
+
+    for (i = 0; i < 6; i++) {
+      unsigned char num;
+
+      if ((*host_addr == '.') || (*host_addr == ':'))
+        host_addr++;
+      num = hex_to_bin(*host_addr++) << 4;
+      num |= hex_to_bin(*host_addr++);
+      rndis_mac_addr[i] = num;
+    }
+  }
+
+  WOORINET_PRINTF(WOORINET_MED, "%02X:%02X:%02X:%02X:%02X:%02X",
+                     rndis_mac_addr[0],
+                     rndis_mac_addr[1],
+                     rndis_mac_addr[2],
+                     rndis_mac_addr[3],
+                     rndis_mac_addr[4],
+                     rndis_mac_addr[5]);
+  return TRUE;
+}
+EXPORT_SYMBOL(bs_rndis_mac_addr_set);
+
+static int __init bs_late_init(void)
+{
+  if (!bs_firmware_version_set())
+  {
+    WOORINET_PRINT(WOORINET_ERROR, "Failed bs_firmware_version_set()");
+  }
+
+  WOORINET_PRINT(WOORINET_MED, "bs_late_init done");
+  return 0;
+}
+late_initcall(bs_late_init);
 

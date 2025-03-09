@@ -3143,6 +3143,58 @@ set_output_flag:
 }
 EXPORT_SYMBOL_GPL(gpiod_direction_output);
 
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+int gpio_pull_up(struct gpio_desc *desc)
+{
+	struct gpio_chip	*chip;
+	int status = -EINVAL;
+
+	VALIDATE_DESC(desc);
+	chip = desc->gdev->chip;
+	if (!chip->get || !chip->pull_up) {
+		gpiod_warn(desc,
+			   "%s: missing get() but have pull_up()\n",
+			   __func__);
+		return -EIO;
+	}
+
+	status = chip->pull_up(chip, gpio_chip_hwgpio(desc));
+	if (status == 0)
+		set_bit(FLAG_PULL_UP, &desc->flags);
+
+	trace_gpio_direction(desc_to_gpio(desc), 1, status);
+
+	return status;
+}
+EXPORT_SYMBOL_GPL(gpio_pull_up);
+
+int gpio_pull_down(struct gpio_desc *desc)
+{
+	struct gpio_chip	*chip;
+	int status = -EINVAL;
+
+	VALIDATE_DESC(desc);
+	chip = desc->gdev->chip;
+	if (!chip->get || !chip->pull_down) {
+		gpiod_warn(desc,
+			   "%s: missing get() but have pull_down()\n",
+			   __func__);
+		return -EIO;
+	}
+
+	status = chip->pull_down(chip, gpio_chip_hwgpio(desc));
+	if (status == 0)
+		set_bit(FLAG_PULL_DOWN, &desc->flags);
+
+	trace_gpio_direction(desc_to_gpio(desc), 1, status);
+
+	return status;
+}
+EXPORT_SYMBOL_GPL(gpio_pull_down);
+#endif
+/* WOORINET STOP */
+
 /**
  * gpiod_set_debounce - sets @debounce time for a GPIO
  * @desc: descriptor of the GPIO for which to set debounce time

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/bitops.h>
@@ -1095,12 +1096,14 @@ error:
 static int __ipa_finish_rt_rule_add(struct ipa3_rt_entry *entry, u32 *rule_hdl,
 		struct ipa3_rt_tbl *tbl)
 {
-	int id;
+	int id, res = 0;
 
 	if (tbl->rule_cnt < IPA_RULE_CNT_MAX)
 		tbl->rule_cnt++;
-	else
-		return -EINVAL;
+	else {
+		res = -EINVAL;
+		goto failed;
+	}
 	if (entry->hdr)
 		entry->hdr->ref_cnt++;
 	else if (entry->proc_ctx)
@@ -1109,6 +1112,7 @@ static int __ipa_finish_rt_rule_add(struct ipa3_rt_entry *entry, u32 *rule_hdl,
 	if (id < 0) {
 		IPAERR_RL("failed to add to tree\n");
 		WARN_ON_RATELIMIT_IPA(1);
+		res = -EPERM;
 		goto ipa_insert_failed;
 	}
 	IPADBG("add rt rule tbl_idx=%d rule_cnt=%d rule_id=%d\n",
@@ -1123,10 +1127,11 @@ ipa_insert_failed:
 		entry->hdr->ref_cnt--;
 	else if (entry->proc_ctx)
 		entry->proc_ctx->ref_cnt--;
+failed:
 	idr_remove(tbl->rule_ids, entry->rule_id);
 	list_del(&entry->link);
 	kmem_cache_free(ipa3_ctx->rt_rule_cache, entry);
-	return -EPERM;
+	return res;
 }
 
 static int __ipa_add_rt_rule(enum ipa_ip_type ip, const char *name,
@@ -1772,7 +1777,7 @@ int __ipa3_del_rt_rule(u32 rule_hdl)
 		!strcmp(entry->tbl->name, IPA_DFLT_RT_TBL_NAME)) {
 		IPADBG("Deleting rule from default rt table idx=%u\n",
 			entry->tbl->idx);
-		if (entry->tbl->rule_cnt == 1) {
+		if (entry->tbl->rule_cnt == 1 && !ipa3_ctx->deepsleep) {
 			IPAERR_RL("Default tbl last rule cannot be deleted\n");
 			return -EINVAL;
 		}

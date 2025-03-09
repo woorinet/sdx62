@@ -4,7 +4,7 @@
 # r8125 is the Linux device driver released for Realtek 2.5Gigabit Ethernet
 # controllers with PCI-Express interface.
 #
-# Copyright(c) 2021 Realtek Semiconductor Corp. All rights reserved.
+# Copyright(c) 2022 Realtek Semiconductor Corp. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -49,6 +49,7 @@ ENABLE_LIB_SUPPORT = y
 ENABLE_USE_FIRMWARE_FILE = y
 DISABLE_PM_SUPPORT = n
 DISABLE_MULTI_MSIX_VECTOR = n
+ENABLE_DOUBLE_VLAN = y
 
 ifneq ($(KERNELRELEASE),)
 	obj-m := r8125.o
@@ -118,6 +119,9 @@ ifneq ($(KERNELRELEASE),)
 	endif
 	ifeq ($(DISABLE_MULTI_MSIX_VECTOR), y)
 		EXTRA_CFLAGS += -DDISABLE_MULTI_MSIX_VECTOR
+	endif
+	ifeq ($(ENABLE_DOUBLE_VLAN), y)
+		EXTRA_CFLAGS += -DENABLE_DOUBLE_VLAN
 	endif
 else
 	BASEDIR := /lib/modules/$(shell uname -r)

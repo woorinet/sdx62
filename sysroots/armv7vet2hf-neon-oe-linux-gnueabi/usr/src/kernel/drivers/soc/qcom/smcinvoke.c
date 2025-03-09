@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #define pr_fmt(fmt) "smcinvoke: %s: " fmt, __func__
@@ -616,15 +617,13 @@ static uint16_t get_server_id(int cb_server_fd)
 	struct smcinvoke_file_data *svr_cxt = NULL;
 	struct file *tmp_filp = fget(cb_server_fd);
 
-	if (!tmp_filp)
+	if (!tmp_filp || !FILE_IS_REMOTE_OBJ(tmp_filp))
 		return server_id;
 
 	svr_cxt = tmp_filp->private_data;
 	if (svr_cxt && svr_cxt->context_type ==  SMCINVOKE_OBJ_TYPE_SERVER)
 		server_id = svr_cxt->server_id;
-
-	if (tmp_filp)
-		fput(tmp_filp);
+	fput(tmp_filp);
 
 	return server_id;
 }
@@ -1042,8 +1041,14 @@ static int invoke_cmd_handler(int cmd, phys_addr_t in_paddr, size_t in_buf_len,
 		break;
 
 	case SMCINVOKE_CB_RSP_CMD:
+		if (legacy_smc_call)
+			qtee_shmbridge_flush_shm_buf(out_shm);
 		ret = qcom_scm_invoke_callback_response(virt_to_phys(out_buf), out_buf_len,
 			result, response_type, data);
+		if (legacy_smc_call) {
+			qtee_shmbridge_inv_shm_buf(in_shm);
+			qtee_shmbridge_inv_shm_buf(out_shm);
+		}
 		break;
 
 	default:
@@ -1125,9 +1130,9 @@ static void process_tzcb_req(void *buf, size_t buf_len, struct file **arr_filp)
 	if (!srvr_info || srvr_info->state == SMCINVOKE_SERVER_STATE_DEFUNCT) {
 		/* ret equals Object_ERROR_DEFUNCT, at this point go to out */
 		if (!srvr_info)
-			pr_debug("server is invalid\n");
+			pr_err("server is invalid\n");
 		else {
-			pr_debug("server is defunct, state= %d tzhandle = %d\n",
+			pr_err("server is defunct, state= %d tzhandle = %d\n",
 				srvr_info->state, cb_req->hdr.tzhandle);
 		}
 		mutex_unlock(&g_smcinvoke_lock);
@@ -1190,9 +1195,9 @@ out:
 		} else if (!srvr_info ||
 			srvr_info->state == SMCINVOKE_SERVER_STATE_DEFUNCT) {
 			cb_req->result = OBJECT_ERROR_DEFUNCT;
-			pr_debug("server invalid, res: %d\n", cb_req->result);
+			pr_err("server invalid, res: %d\n", cb_req->result);
 		} else {
-			pr_debug("%s: unexpected event happened, ret:%d\n", __func__, ret);
+			pr_err("%s: unexpected event happened, ret:%d\n", __func__, ret);
 			cb_req->result = OBJECT_ERROR_ABORT;
 		}
 	}
@@ -1861,8 +1866,11 @@ static long process_accept_req(struct file *filp, unsigned int cmd,
 		}
 	} while (!cb_txn);
 out:
-	if (server_info)
+	if (server_info) {
+		mutex_lock(&g_smcinvoke_lock);
 		kref_put(&server_info->ref_cnt, destroy_cb_server);
+		mutex_unlock(&g_smcinvoke_lock);
+	}
 
 	if (ret && ret != -ERESTARTSYS)
 		pr_err("accept thread returning with ret: %d\n", ret);

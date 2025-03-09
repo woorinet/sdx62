@@ -3,7 +3,7 @@
 #include "sdxlemur.dtsi"
 #include "sdxlemur-woorinet.dtsi"
 #include "sdxlemur-woorinet-ep.dtsi"
-#include "sdxlemur-1024mb.dtsi"
+#include "sdxlemur-1024mb-cpe.dtsi"
 
 / {
 	model = "WOORINET SDX PCIe-EP";

@@ -248,44 +248,6 @@ static void stmmac_get_rx_hwtstamp(struct stmmac_priv *priv, struct dma_desc *p,
 	}
 }
 
-static void stmmac_display_rx_rings(struct stmmac_priv *priv)
-{
-	void *head_rx;
-
-	/* Display RX rings */
-	struct stmmac_rx_queue *rx_q = &priv->rx_queue;
-
-	pr_info("\tRX Queue %u rings\n", priv->queue);
-
-	head_rx = (void *)rx_q->dma_rx;
-
-	/* Display RX ring */
-	stmmac_display_ring(priv, head_rx, DMA_RX_SIZE, true);
-}
-
-static void stmmac_display_tx_rings(struct stmmac_priv *priv)
-{
-	void *head_tx;
-
-	/* Display TX rings */
-	struct stmmac_tx_queue *tx_q = &priv->tx_queue;
-
-	pr_info("\tTX Queue %d rings\n", priv->queue);
-
-	head_tx = (void *)tx_q->dma_tx;
-
-	stmmac_display_ring(priv, head_tx, DMA_TX_SIZE, false);
-}
-
-static void stmmac_display_rings(struct stmmac_priv *priv)
-{
-	/* Display RX ring */
-	stmmac_display_rx_rings(priv);
-
-	/* Display TX ring */
-	stmmac_display_tx_rings(priv);
-}
-
 static int stmmac_set_bfsize(int mtu, int bufsize)
 {
 	int ret = bufsize;
@@ -529,9 +491,6 @@ static int init_dma_desc_rings(struct net_device *dev, gfp_t flags)
 	ret = init_dma_tx_desc_rings(dev);
 
 	stmmac_clear_descriptors(priv);
-
-	if (netif_msg_hw(priv))
-		stmmac_display_rings(priv);
 
 	return ret;
 }
@@ -1607,8 +1566,6 @@ static netdev_tx_t stmmac_tso_xmit(struct sk_buff *skb, struct net_device *dev)
 			__func__, tx_q->cur_tx, tx_q->dirty_tx, first_entry,
 			tx_q->cur_tx, first, nfrags);
 
-		stmmac_display_ring(priv, (void *)tx_q->dma_tx, DMA_TX_SIZE, 0);
-
 		pr_info(">>> frame to be transmitted:\n");
 		print_pkt(skb->data, skb_headlen(skb));
 	}
@@ -1775,17 +1732,6 @@ static netdev_tx_t stmmac_xmit(struct sk_buff *skb, struct net_device *dev)
 	tx_q->cur_tx = entry;
 
 	if (netif_msg_pktdata(priv)) {
-		void *tx_head;
-
-		netdev_dbg(priv->dev,
-			   "%s: curr=%d dirty=%d f=%d, e=%d, first=%p, nfrags=%d",
-			   __func__, tx_q->cur_tx, tx_q->dirty_tx, first_entry,
-			   entry, first, nfrags);
-
-		tx_head = (void *)tx_q->dma_tx;
-
-		stmmac_display_ring(priv, tx_head, DMA_TX_SIZE, false);
-
 		netdev_dbg(priv->dev, ">>> frame to be transmitted: ");
 		print_pkt(skb->data, skb->len);
 	}
@@ -1923,7 +1869,6 @@ static inline void stmmac_rx_refill(struct stmmac_priv *priv, u32 queue)
 		stmmac_set_desc_addr(priv, p, buf->addr);
 
 		rx_q->rx_count_frames++;
-		rx_q->rx_count_frames += priv->rx_coal_frames;
 		if (rx_q->rx_count_frames > priv->rx_coal_frames)
 			rx_q->rx_count_frames = 0;
 		use_rx_wd = priv->use_riwt && rx_q->rx_count_frames;
@@ -1966,14 +1911,6 @@ static int stmmac_rx(struct stmmac_priv *priv, int limit, u32 queue)
 	}
 
 	trace_stmmac_rx_entry(queue);
-	if (netif_msg_rx_status(priv)) {
-		void *rx_head;
-
-		netdev_dbg(priv->dev, "%s: descriptor ring:\n", __func__);
-		rx_head = (void *)rx_q->dma_rx;
-
-		stmmac_display_ring(priv, rx_head, DMA_RX_SIZE, true);
-	}
 	while (count < limit) {
 		unsigned int prev_len = 0;
 		enum pkt_hash_types hash_type;
@@ -2863,6 +2800,7 @@ int stmmac_dvr_probe(struct device *device,
 	ndev->features |= ndev->hw_features | NETIF_F_HIGHDMA;
 	ndev->watchdog_timeo = msecs_to_jiffies(watchdog);
 #ifdef STMMAC_VLAN_TAG_USED
+	ndev->vlan_features |= ndev->hw_features;
 	/* Both mac100 and gmac support receive VLAN tag detection */
 	ndev->features |= NETIF_F_HW_VLAN_CTAG_RX | NETIF_F_HW_VLAN_STAG_RX;
 	ndev->features |= NETIF_F_HW_VLAN_CTAG_FILTER |
@@ -2952,11 +2890,10 @@ int stmmac_dvr_remove(struct device *dev)
 
 	if (priv->emac_state > EMAC_INIT_ST) {
 		stmmac_stop_dma(priv);
-
 		netif_carrier_off(ndev);
-		unregister_netdev(ndev);
 	}
 
+	unregister_netdev(ndev);
 	if (priv->plat->stmmac_rst)
 		reset_control_assert(priv->plat->stmmac_rst);
 	destroy_workqueue(priv->wq);
@@ -2984,11 +2921,10 @@ int stmmac_suspend(struct device *dev)
 	mutex_lock(&priv->lock);
 
 	netif_device_detach(ndev);
-	stmmac_stop_queue(priv);
-
 	stmmac_disable_queue(priv);
 
-	del_timer_sync(&priv->tx_queue.txtimer);
+	if (!priv->tx_coal_timer_disable)
+		del_timer_sync(&priv->tx_queue.txtimer);
 
 	/* Stop TX/RX DMA */
 	stmmac_stop_dma(priv);

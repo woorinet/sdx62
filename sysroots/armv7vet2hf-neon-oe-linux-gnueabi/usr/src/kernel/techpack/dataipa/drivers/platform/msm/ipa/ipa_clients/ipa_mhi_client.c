@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2015-2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/debugfs.h>
@@ -59,8 +61,8 @@
 #define IPA_MHI_SUSPEND_SLEEP_MIN 900
 #define IPA_MHI_SUSPEND_SLEEP_MAX 1100
 
-#define IPA_MHI_MAX_UL_CHANNELS 2
-#define IPA_MHI_MAX_DL_CHANNELS 4
+#define IPA_MHI_MAX_UL_CHANNELS 3  //3 out channels below
+#define IPA_MHI_MAX_DL_CHANNELS 6  //4 in channels + QDSS + COAL
 
 /* bit #40 in address should be asserted for MHI transfers over pcie */
 #define IPA_MHI_CLIENT_HOST_ADDR_COND(addr) \
@@ -70,6 +72,7 @@
 #define IPA_MHI_CLIENT_IP_HW_0_IN 101
 #define IPA_MHI_CLIENT_ADPL_IN 102
 #define IPA_MHI_CLIENT_IP_HW_QDSS 103
+#define IPA_MHI_CLIENT_IP_HW_COAL 104
 #define IPA_MHI_CLIENT_IP_HW_1_OUT 105
 #define IPA_MHI_CLIENT_IP_HW_1_IN 106
 #define IPA_MHI_CLIENT_QMAP_FLOW_CTRL_OUT 109
@@ -136,7 +139,6 @@ struct ipa_mhi_client_ctx {
 	struct workqueue_struct *wq;
 	struct ipa_mhi_channel_ctx ul_channels[IPA_MHI_MAX_UL_CHANNELS];
 	struct ipa_mhi_channel_ctx dl_channels[IPA_MHI_MAX_DL_CHANNELS];
-	u32 total_channels;
 	struct ipa_mhi_msi_info msi;
 	u32 mmio_addr;
 	u32 first_ch_idx;
@@ -149,6 +151,7 @@ struct ipa_mhi_client_ctx {
 	u32 use_ipadma;
 	bool assert_bit40;
 	bool test_mode;
+	bool disable_msi;
 	u32 pm_hdl;
 	u32 modem_pm_hdl;
 	enum ipa_mhi_mstate mhi_mstate;
@@ -779,7 +782,6 @@ static struct ipa_mhi_channel_ctx *ipa_mhi_get_channel_context(
 
 	channels[ch_idx].valid = true;
 	channels[ch_idx].id = channel_id;
-	channels[ch_idx].index = ipa_mhi_client_ctx->total_channels++;
 	channels[ch_idx].client = client;
 	channels[ch_idx].state = IPA_HW_MHI_CHANNEL_STATE_INVALID;
 
@@ -988,8 +990,7 @@ static bool ipa_mhi_wait_for_ul_empty_timeout(unsigned int msecs)
 			break;
 		}
 
-		if (IPA_MHI_MAX_UL_CHANNELS == 1)
-			usleep_range(IPA_GSI_CHANNEL_STOP_SLEEP_MIN_USEC,
+		usleep_range(IPA_GSI_CHANNEL_STOP_SLEEP_MIN_USEC,
 			IPA_GSI_CHANNEL_STOP_SLEEP_MAX_USEC);
 	}
 
@@ -1219,6 +1220,11 @@ static enum ipa_client_type ipa3_mhi_get_client_by_chid(u32 chid)
 	case IPA_MHI_CLIENT_IP_HW_QDSS:
 		client = IPA_CLIENT_MHI_QDSS_CONS;
 		break;
+#ifdef IPA_CLIENT_MHI_COAL_CONS
+	case IPA_MHI_CLIENT_IP_HW_COAL:
+		client = IPA_CLIENT_MHI_COAL_CONS;
+		break;
+#endif
 	case IPA_MHI_CLIENT_IP_HW_0_OUT:
 		client = IPA_CLIENT_MHI_PROD;
 		break;
@@ -1338,6 +1344,10 @@ static int ipa_mhi_connect_pipe_internal(struct ipa_mhi_connect_params *in, u32 
 		IPA_MHI_ERR("ipa_mhi_read_ch_ctx failed %d\n", res);
 		goto fail_start_channel;
 	}
+	channel->index = channel->ch_ctx_host.erindex - ipa_mhi_client_ctx->first_er_idx;
+	IPA_MHI_DBG("ch_ctx_host.erindex = %d first_er_idx = %d index = %d\n",
+			channel->ch_ctx_host.erindex, ipa_mhi_client_ctx->first_er_idx,
+			channel->index);
 
 	internal.channel_id = in->channel_id;
 	internal.sys = &in->sys;
@@ -1358,6 +1368,7 @@ static int ipa_mhi_connect_pipe_internal(struct ipa_mhi_connect_params *in, u32 
 	internal.start.gsi.cached_gsi_evt_ring_hdl =
 			&channel->cached_gsi_evt_ring_hdl;
 	internal.start.gsi.evchid = channel->index;
+	internal.start.gsi.disable_msi = ipa_mhi_client_ctx->disable_msi;
 
 	res = ipa3_connect_mhi_pipe(&internal, clnt_hdl);
 	if (res) {
@@ -1384,6 +1395,16 @@ static int ipa_mhi_connect_pipe_internal(struct ipa_mhi_connect_params *in, u32 
 		ipa3_update_mhi_ctrl_state(IPA_MHI_CTRL_UL_SETUP, true);
 	else if (in->sys.client == IPA_CLIENT_MHI_LOW_LAT_CONS)
 		ipa3_update_mhi_ctrl_state(IPA_MHI_CTRL_DL_SETUP, true);
+
+#ifdef IPA_CLIENT_MHI_COAL_CONS
+	if (in->sys.client == IPA_CLIENT_MHI_COAL_CONS)
+	{
+		mutex_lock(&ipa3_ctx->lock);
+		ipa3_ctx->is_mhi_coal_set = true;
+		mutex_unlock(&ipa3_ctx->lock);
+		ipa_send_mhi_coal_endp_ind_to_modem(true);
+	}
+#endif
 
 	mutex_unlock(&mhi_client_general_mutex);
 
@@ -1445,6 +1466,16 @@ static int ipa_mhi_disconnect_pipe_internal(u32 clnt_hdl)
 		ipa3_update_mhi_ctrl_state(IPA_MHI_CTRL_UL_SETUP, false);
 	else if (client == IPA_CLIENT_MHI_LOW_LAT_CONS)
 		ipa3_update_mhi_ctrl_state(IPA_MHI_CTRL_DL_SETUP, false);
+
+#ifdef IPA_CLIENT_MHI_COAL_CONS
+	if (client == IPA_CLIENT_MHI_COAL_CONS)
+	{
+		mutex_lock(&ipa3_ctx->lock);
+		ipa3_ctx->is_mhi_coal_set = false;
+		mutex_unlock(&ipa3_ctx->lock);
+	}
+#endif
+
 	IPA_ACTIVE_CLIENTS_INC_EP(client);
 
 	res = ipa_mhi_reset_channel(channel, false);
@@ -1482,7 +1513,8 @@ static int ipa_mhi_suspend_channels(struct ipa_mhi_channel_ctx *channels,
 	int res;
 
 	IPA_MHI_FUNC_ENTRY();
-	for (i = 0; i < max_channels; i++) {
+	/* have to suspend channel backwards for coalescing channel */
+	for (i = max_channels - 1; i >= 0; i--) {
 		if (!channels[i].valid)
 			continue;
 		if (channels[i].state !=
@@ -2047,7 +2079,8 @@ static int  ipa_mhi_destroy_channels(struct ipa_mhi_channel_ctx *channels,
 	int i, res;
 	u32 clnt_hdl;
 
-	for (i = 0; i < num_of_channels; i++) {
+	/* have to destroy backward for coalescing channels */
+	for (i = num_of_channels - 1; i >= 0; i--) {
 		channel = &channels[i];
 		if (!channel->valid)
 			continue;
@@ -2225,6 +2258,15 @@ static int ipa_mhi_register_pm(void)
 		goto fail_pm_cons;
 	}
 
+#ifdef IPA_CLIENT_MHI_COAL_CONS
+	res = ipa_pm_associate_ipa_cons_to_client(ipa_mhi_client_ctx->pm_hdl,
+		IPA_CLIENT_MHI_COAL_CONS);
+	if (res) {
+		IPA_MHI_ERR("fail to associate low_lat_cons with PM %d\n", res);
+		goto fail_pm_cons;
+	}
+
+#endif
 	res = ipa_pm_set_throughput(ipa_mhi_client_ctx->pm_hdl, 1000);
 	if (res) {
 		IPA_MHI_ERR("fail to set perf profile to PM %d\n", res);
@@ -2315,6 +2357,7 @@ static int ipa_mhi_init_internal(struct ipa_mhi_init_params *params)
 	ipa_mhi_client_ctx->use_ipadma = true;
 	ipa_mhi_client_ctx->assert_bit40 = !!params->assert_bit40;
 	ipa_mhi_client_ctx->test_mode = params->test_mode;
+	ipa_mhi_client_ctx->disable_msi = params->disable_msi;
 	ipa_mhi_client_ctx->mhi_mstate = IPA_MHI_STATE_M0;
 
 	ipa_mhi_client_ctx->wq = create_singlethread_workqueue("ipa_mhi_wq");

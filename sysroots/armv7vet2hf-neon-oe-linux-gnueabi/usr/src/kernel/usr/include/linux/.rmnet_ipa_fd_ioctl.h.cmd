@@ -1,0 +1,1 @@
+cmd_usr/include/linux/rmnet_ipa_fd_ioctl.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/rmnet_ipa_fd_ioctl.h usr/include/linux/rmnet_ipa_fd_ioctl.h

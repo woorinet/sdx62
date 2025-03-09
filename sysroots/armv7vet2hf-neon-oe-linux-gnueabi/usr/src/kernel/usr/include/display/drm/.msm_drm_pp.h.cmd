@@ -1,0 +1,1 @@
+cmd_usr/include/display/drm/msm_drm_pp.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/techpack/display/include/uapi/display/drm/msm_drm_pp.h usr/include/display/drm/msm_drm_pp.h

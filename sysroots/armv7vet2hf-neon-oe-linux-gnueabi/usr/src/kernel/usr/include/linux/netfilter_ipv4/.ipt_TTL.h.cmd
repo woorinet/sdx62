@@ -1,0 +1,1 @@
+cmd_usr/include/linux/netfilter_ipv4/ipt_TTL.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/netfilter_ipv4/ipt_TTL.h usr/include/linux/netfilter_ipv4/ipt_TTL.h

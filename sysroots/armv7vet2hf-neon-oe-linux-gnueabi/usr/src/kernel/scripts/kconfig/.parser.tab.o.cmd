@@ -1,4 +1,4 @@
-cmd_scripts/kconfig/parser.tab.o := gcc -Wp,-MD,scripts/kconfig/.parser.tab.o.d -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89      -I ./scripts/kconfig -c -o scripts/kconfig/parser.tab.o scripts/kconfig/parser.tab.c
+cmd_scripts/kconfig/parser.tab.o := gcc  -isystem/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/include -O2 -pipe -L/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -L/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,--enable-new-dtags                         -Wl,-rpath-link,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath-link,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-rpath,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/usr/lib                         -Wl,-rpath,/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work/sdxlemur-oe-linux-gnueabi/make-mod-scripts/1.0-r0/recipe-sysroot-native/lib                         -Wl,-O1 -Wl,--allow-shlib-undefined -Wl,--dynamic-linker=/home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/sysroots-uninative/x86_64-linux/lib/ld-linux-x86-64.so.2 -Wp,-MD,scripts/kconfig/.parser.tab.o.d -Wall -Wmissing-prototypes -Wstrict-prototypes -O2 -fomit-frame-pointer -std=gnu89      -I /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig -I ./scripts/kconfig -c -o scripts/kconfig/parser.tab.o scripts/kconfig/parser.tab.c
 
 source_scripts/kconfig/parser.tab.o := scripts/kconfig/parser.tab.c
 
@@ -48,14 +48,15 @@ deps_scripts/kconfig/parser.tab.o := \
   /usr/include/x86_64-linux-gnu/bits/string2.h \
   /usr/include/x86_64-linux-gnu/bits/string3.h \
   /usr/lib/gcc/x86_64-linux-gnu/5/include/stdbool.h \
-  scripts/kconfig/lkc.h \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/lkc.h \
     $(wildcard include/config/prefix.h) \
-  scripts/kconfig/expr.h \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/expr.h \
   /usr/include/assert.h \
-  scripts/kconfig/list.h \
-  scripts/kconfig/lkc_proto.h \
-  scripts/kconfig/util.c \
-  scripts/kconfig/menu.c \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/list.h \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/lkc_proto.h \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/util.c \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/lkc.h \
+  /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/kconfig/menu.c \
 
 scripts/kconfig/parser.tab.o: $(deps_scripts/kconfig/parser.tab.o)
 

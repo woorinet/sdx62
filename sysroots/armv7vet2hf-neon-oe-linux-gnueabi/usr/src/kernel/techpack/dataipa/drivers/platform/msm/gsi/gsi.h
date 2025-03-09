@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2015-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022-2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifndef GSI_H
@@ -32,6 +33,16 @@
 #define GSI_NO_EVT_ERINDEX 255
 #define GSI_ISR_CACHE_MAX 20
 #define MAX_CHANNELS_SHARING_EVENT_RING 2
+#define MINIDUMP_MASK 0x10000
+
+#define GSI_INST_RAM_FW_VER_OFFSET                      (0)
+#define GSI_INST_RAM_FW_VER_GSI_3_0_OFFSET      (64)
+#define GSI_INST_RAM_FW_VER_HW_MASK                     (0xFC00)
+#define GSI_INST_RAM_FW_VER_HW_SHIFT            (10)
+#define GSI_INST_RAM_FW_VER_FLAVOR_MASK         (0x380)
+#define GSI_INST_RAM_FW_VER_FLAVOR_SHIFT        (7)
+#define GSI_INST_RAM_FW_VER_FW_MASK                     (0x7f)
+#define GSI_INST_RAM_FW_VER_FW_SHIFT            (0)
 
 #define GSI_IPC_LOGGING(buf, fmt, args...) \
 	do { \
@@ -89,6 +100,7 @@ enum gsi_ver {
 	GSI_VER_2_9 = 8,
 	GSI_VER_2_11 = 9,
 	GSI_VER_3_0 = 10,
+	GSI_VER_5_2 = 11,
 	GSI_VER_MAX,
 };
 
@@ -148,6 +160,8 @@ enum gsi_evt_chtype {
 	GSI_EVT_CHTYPE_11AD_EV = 0x9,
 	GSI_EVT_CHTYPE_RTK_EV = 0xC,
 	GSI_EVT_CHTYPE_NTN_EV = 0xD,
+	GSI_EVT_CHTYPE_WDI3M_EV = 0xE,
+	GSI_EVT_CHTYPE_RTK3_EV = 0x11,
 };
 
 enum gsi_evt_ring_elem_size {
@@ -237,6 +251,8 @@ enum gsi_chan_prot {
 	GSI_CHAN_PROT_QDSS = 0xB,
 	GSI_CHAN_PROT_RTK = 0xC,
 	GSI_CHAN_PROT_NTN = 0xD,
+	GSI_CHAN_PROT_WDI3M = 0xE,
+	GSI_CHAN_PROT_RTK3 = 0x11,
 };
 
 enum gsi_max_prefetch {
@@ -324,6 +340,8 @@ struct gsi_per_props {
 	void *user_data;
 	int (*clk_status_cb)(void);
 	void (*enable_clk_bug_on)(void);
+	void (*vote_clk_cb)(void);
+	void (*unvote_clk_cb)(void);
 	bool skip_ieob_mask_wa;
 	bool tx_poll;
 };
@@ -647,20 +665,23 @@ struct __packed gsi_mhi_channel_scratch {
  * @oob_mod_threshold:   Defines OOB moderation threshold. Units are in 8
  *                       ring elements.
  *                       should not ring DBs until notified of DB mode/OOB mode
+ * @min_available_elements: Minimum number of available credits used for MHIC
+ * 						 channels. No of coalescing context+1.
  */
 struct __packed gsi_mhi_channel_scratch_v2 {
-    uint32_t mhi_host_wp_addr_lo;
+    uint32_t mhi_host_wp_addr_lo; /* scratch 1 = 32 bits */
     uint32_t mhi_host_wp_addr_hi : 9;
     uint32_t polling_configuration : 5;
-    uint32_t rsvd1 : 18;
+    uint32_t rsvd1 : 18; /* end of scratch 2 */
     uint32_t rsvd2 : 1;
     uint32_t assert_bit40 : 1;
     uint32_t resvd3 : 5;
     uint32_t burst_mode_enabled : 1;
     uint32_t polling_mode : 1;
     uint32_t oob_mod_threshold : 5;
-    uint32_t resvd4 : 18; /* Not configured by AP */
-    uint32_t resvd5; /* Not configured by AP */
+    uint32_t min_available_elements : 4;
+    uint32_t resvd4 : 14; /* end of scratch 3 */
+    uint32_t resvd5; /* Scratch 4 Not configured by AP */
 };
 
 /**
@@ -915,6 +936,7 @@ struct __packed gsi_11ad_tx_channel_scratch {
  *                                  be updated.
  * @qmap_id: Rx only, used for setting metadata register in IPA. Read only field
  *           for MCS. Write for SW.
+ * @rx_tlv_format : bit to know the rx_tlv_format for pine 0 and for hsp 1
  * @resv: reserved bits.
  * @endp_metadata_reg_offset: Rx only, the offset of
  *                 IPA_ENDP_INIT_HDR_METADATA_n of the
@@ -929,7 +951,8 @@ struct __packed gsi_wdi3_channel_scratch {
 	uint32_t wifi_rp_address_high;
 	uint32_t update_rp_moderation_threshold : 5;
 	uint32_t qmap_id : 8;
-	uint32_t reserved1 : 3;
+	uint32_t rx_tlv_format : 1;
+	uint32_t reserved1 : 2;
 	uint32_t endp_metadata_reg_offset : 16;
 	uint32_t rx_pkt_offset : 16;
 	uint32_t reserved2 : 16;
@@ -1005,6 +1028,7 @@ union __packed gsi_wdi3_channel_scratch2_reg {
  * @rtk_bar_high: Realtek bar address MSB
  * @queue_number: dma channel number in rtk
  * @fix_buff_size: buff size in KB
+ * @num_queues_enabled: Total numbet of queue to be enabled
  * @rtk_buff_addr_high: buffer addr where TRE points to
  * @rtk_buff_addr_low: buffer addr where TRE points to
  *			the descriptor
@@ -1014,7 +1038,7 @@ union __packed gsi_wdi3_channel_scratch2_reg {
 	uint32_t rtk_bar_high : 9;
 	uint32_t queue_number : 5;
 	uint32_t fix_buff_size : 4;
-	uint32_t reserved1 : 6;
+	uint32_t num_queues_enabled : 6;
 	uint32_t rtk_buff_addr_high : 8;
 	uint32_t rtk_buff_addr_low;
 	uint32_t reserved2;

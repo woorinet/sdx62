@@ -165,6 +165,7 @@ enum ipahal_reg_name {
 	IPA_ULSO_CFG_IP_ID_MIN_VALUE_n,
 	IPA_ULSO_CFG_IP_ID_MAX_VALUE_n,
 	IPA_ENDP_INIT_ULSO_CFG_n,
+	IPA_ENDP_INIT_UCP_CFG_n,
 	IPA_REG_MAX,
 };
 
@@ -216,6 +217,7 @@ struct ipahal_reg_endp_init_rsrc_grp {
 struct ipahal_reg_endp_init_mode {
 	u32 dst_pipe_number;
 	struct ipa_ep_cfg_mode ep_mode;
+	u32 replication_en;
 };
 
 /*

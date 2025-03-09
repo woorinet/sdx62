@@ -1,0 +1,1 @@
+cmd_usr/include/rdma/hfi/hfi1_user.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/rdma/hfi/hfi1_user.h usr/include/rdma/hfi/hfi1_user.h

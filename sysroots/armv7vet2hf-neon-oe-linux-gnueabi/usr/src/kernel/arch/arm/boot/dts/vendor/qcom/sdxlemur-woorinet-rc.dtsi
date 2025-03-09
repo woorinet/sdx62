@@ -31,25 +31,36 @@
 		qcom,dir-rx;
 		qcom,rx-filter-ip;
 
-		qcom,ring-size = <1023>; /* Cannot be a power of 2 */
-		qcom,buff-size = <2048>;
+		qcom,ring-size = <2047>; /* Cannot be a power of 2 */
+		qcom,buff-size = <4096>;
 
-		qcom,mod-count-min = <32>;
-		qcom,mod-count-max = <64>;
-		qcom,mod-usecs-min = <30>;
-		qcom,mod-usecs-max = <60>;
+		qcom,mod-count-min = <1>;
+		qcom,mod-count-max = <2>;
+		qcom,mod-usecs-min = <1>;
+		qcom,mod-usecs-max = <2>;
 	};
 
 	ioss_r8125_eth0_tx: r8125_tx@eth0 {
 		qcom,dir-tx;
-		qcom,ring-size = <1024>;
-		qcom,buff-size = <2048>;
+		/* QTI test patch
+		 * qcom,ring-size = <2048>;
+		 */
+		qcom,ring-size = <32768>;
+		qcom,buff-size = <4096>;
 
-		qcom,mod-count-min = <32>;
-		qcom,mod-count-max = <64>;
-		qcom,mod-usecs-min = <30>;
-		qcom,mod-usecs-max = <60>;
+		qcom,mod-count-min = <1>;
+		qcom,mod-count-max = <2>;
+		qcom,mod-usecs-min = <1>;
+		qcom,mod-usecs-max = <2>;
 	};
+};
+
+&ipa_eth_group1 {
+	qcom,iommu-dma-addr-pool = <0x80000000 0x0ef00000>;
+};
+
+&ipa_eth_group2 {
+	qcom,iommu-dma-addr-pool = <0x8ef10000 0x00f00000>;
 };
 
 &pcie0_rp {
@@ -90,4 +101,6 @@
 		};
 	};
 };
+
+/delete-node/ &sdx_ext_ipc;
 

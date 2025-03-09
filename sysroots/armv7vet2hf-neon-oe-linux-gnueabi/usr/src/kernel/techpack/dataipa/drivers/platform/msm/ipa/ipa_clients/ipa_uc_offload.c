@@ -494,6 +494,10 @@ static int ipa_uc_offload_conn_pipes_internal(struct ipa_uc_offload_conn_in_para
 		return -EPERM;
 	}
 
+	/*Store the connection info, required during disconnect pipe */
+	memcpy(&offload_ctx->conn, &inp->u.ntn,
+			sizeof(struct ipa_ntn_conn_in_params));
+
 	switch (offload_ctx->proto) {
 	case IPA_UC_NTN_V2X:
 	case IPA_UC_NTN:
@@ -712,16 +716,28 @@ int ipa_set_perf_profile_internal(struct ipa_perf_profile *profile)
 	}
 
 	if (profile->client != IPA_CLIENT_ETHERNET_PROD &&
-		profile->client != IPA_CLIENT_ETHERNET_CONS) {
+		profile->client != IPA_CLIENT_ETHERNET2_PROD &&
+		profile->client != IPA_CLIENT_ETHERNET_CONS &&
+		profile->client != IPA_CLIENT_ETHERNET2_CONS) {
 		IPA_UC_OFFLOAD_ERR("not supported\n");
 		return -EINVAL;
+	}
+
+ 	if((profile->proto != IPA_UC_NTN) && (profile->proto != IPA_UC_NTN_V2X)) {
+		IPA_UC_OFFLOAD_ERR("Invalid protocol\n");
+		return -EINVAL;
+	}
+
+	if (!ipa_uc_offload_ctx[profile->proto]) {
+		IPA_UC_OFFLOAD_ERR("uC offload context is NULL\n");
+		 return -EINVAL;
 	}
 
 	IPA_UC_OFFLOAD_DBG("setting throughput to %d\n",
 		profile->max_supported_bw_mbps);
 
 	return ipa_pm_set_throughput(
-		ipa_uc_offload_ctx[IPA_UC_NTN]->pm_hdl,
+		ipa_uc_offload_ctx[profile->proto]->pm_hdl,
 		profile->max_supported_bw_mbps);
 }
 

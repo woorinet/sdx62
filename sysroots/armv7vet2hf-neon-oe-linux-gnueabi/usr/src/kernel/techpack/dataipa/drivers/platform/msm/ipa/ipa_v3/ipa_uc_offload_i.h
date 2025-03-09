@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 /*
  * Copyright (c) 2016-2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #ifndef _IPA_UC_OFFLOAD_I_H_
@@ -28,7 +30,7 @@
 #define MAX_NTN_CHANNELS 2
 #define MAX_11AD_CHANNELS 5
 #define MAX_WDI2_CHANNELS 2
-#define MAX_WDI3_CHANNELS 3
+#define MAX_WDI3_CHANNELS 4
 #define MAX_MHIP_CHANNELS 4
 #define MAX_USB_CHANNELS 2
 
@@ -47,7 +49,7 @@
 #define FEATURE_ENUM_VAL(feature, opcode) ((feature << 5) | opcode)
 #define EXTRACT_UC_FEATURE(value) (value >> 5)
 
-#define IPA_HW_NUM_FEATURES 0x8
+#define IPA_HW_NUM_FEATURES 0xF
 
 /**
  * enum ipa3_hw_features - Values that represent the features supported
@@ -60,6 +62,8 @@
  * @IPA_HW_FEATURE_OFFLOAD : Feature related to several protocols operation in
  *				IPA HW. use protocol field to
  *				 determine (e.g. IPA_HW_PROTOCOL_11ad).
+ * @IPA_HW_FEATURE_EOGRE : Feature related to Legacy EoGRE
+ * @IPA_HW_FEATURE_EOGRE_UNTAG : Feature related to untagged PPPOE over EoGRE
  */
 enum ipa3_hw_features {
 	IPA_HW_FEATURE_COMMON		=	0x0,
@@ -69,6 +73,14 @@ enum ipa3_hw_features {
 	IPA_HW_FEATURE_ZIP		=	0x4,
 	IPA_HW_FEATURE_NTN		=	0x5,
 	IPA_HW_FEATURE_OFFLOAD		=	0x6,
+	IPA_HW_FEATURE_UNIT		=	0x7,
+	IPA_HW_FEATURE_EOGRE		=	0x8,
+	IPA_HW_FEATURE_UNIT_2		=	0x9,
+	IPA_HW_FEATURE_UNIT_3		=	0xA,
+	IPA_HW_FEATURE_UNIT_4		=	0xB,
+	IPA_HW_FEATURE_EOGRE_UNTAG	=	0xC,
+	IPA_HW_FEATURE_MPLS		=	0xD,
+	IPA_HW_FEATURE_MULTI		=	0xE,
 	IPA_HW_FEATURE_MAX		=	IPA_HW_NUM_FEATURES
 };
 
@@ -83,8 +95,9 @@ enum ipa3_hw_features {
  * @IPA_HW_PROTOCOL_ETH : protocol related to ETH operation in IPA HW
  * @IPA_HW_PROTOCOL_MHIP: protocol related to MHIP operation in IPA HW
  * @IPA_HW_PROTOCOL_USB : protocol related to USB operation in IPA HW
- * @IPA_HW_PROTOCOL_RTK : protocol related to RTK operation in IPA HW
+ * @IPA_HW_PROTOCOL_RTK : protocol related to RTK8125B operation in IPA HW
  * @IPA_HW_PROTOCOL_NTN3 : protocol related to NTN3 operation in IPA HW
+ * @IPA_HW_PROTOCOL_RTK3 : protocol related to RTK111K operation in IPA HW
  */
 enum ipa4_hw_protocol {
 	IPA_HW_PROTOCOL_COMMON = 0x0,
@@ -97,6 +110,7 @@ enum ipa4_hw_protocol {
 	IPA_HW_PROTOCOL_USB = 0x7,
 	IPA_HW_PROTOCOL_RTK = 0x9,
 	IPA_HW_PROTOCOL_NTN3 = 0xA,
+	IPA_HW_PROTOCOL_RTK3 = 0x11,
 	IPA_HW_PROTOCOL_MAX
 };
 

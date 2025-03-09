@@ -102,10 +102,10 @@ enum wsmem_composite_disable{
   BS_USB_DIS_BITMASK_MBIM,              /* 0x0080 is (1<<BS_USB_DIS_BITMASK_MBIM) */
   BS_USB_DIS_BITMASK_RNDIS,             /* 0x0100 is (1<<BS_USB_DIS_BITMASK_RNDIS) */
   BS_USB_DIS_BITMASK_AUDIO,             /* 0x0200 is (1<<BS_USB_DIS_BITMASK_AUDIO) */
-  BS_USB_DIS_BITMASK_RESERVED,          /* 0x0400 is (1<<BS_USB_DIS_BITMASK_RESERVED) */
+  BS_USB_DIS_BITMASK_DIAG_MDM,          /* 0x0400 is (1<<BS_USB_DIS_BITMASK_DIAG_MDM) */
   BS_USB_DIS_BITMASK_ECM,               /* 0x0800 is (1<<BS_USB_DIS_BITMASK_ECM) */
-  BS_USB_DIS_BITMASK_RESERVED1,         /* 0x1000 is (1<<BS_USB_DIS_BITMASK_RESERVED1) */
-  BS_USB_DIS_BITMASK_QDSS,              /* 0x2000 is (1<<BS_USB_DIS_BITMASK_QDSS) */
+  BS_USB_DIS_BITMASK_QDSS,              /* 0x1000 is (1<<BS_USB_DIS_BITMASK_QDSS) */
+  BS_USB_DIS_BITMASK_QDSS_MDM,          /* 0x2000 is (1<<BS_USB_DIS_BITMASK_QDSS_MDM) */
   BS_USB_DIS_BITMASK_MASS_STORAGE,      /* 0x4000 is (1<<BS_USB_DIS_BITMASK_MASS_STORAGE) */
   BS_USB_DIS_BITMASK_RESERVED2,         /* 0x8000 is (1<<BS_USB_DIS_BITMASK_RESERVED2) */
 };
@@ -116,7 +116,7 @@ enum wsmem_composite_disable{
 typedef PACKED struct PACKED_POST wsmem_bl_boot
 {
   uint32 rfhwid;                  /*  4 bytes */
-  uint32 reserved0;               /*  4 bytes */
+  uint32 rfhwbid;                 /*  4 bytes */
   uint32 hwid;                    /*  4 bytes */
   wsmem_blsp_configure blsp[6];   /* 24 bytes */
 
@@ -135,13 +135,18 @@ typedef PACKED struct PACKED_POST wsmem_bl_boot
   /* 80 bytes */
 
   /* enum wsmem_fota_mode for uint32 fota_mode */
-  uint8 project_name[16];         /*  16 bytes */
-  uint8 carrier[16];              /*  16 bytes */
-  uint8 mcfg_carrier[12];         /*  12 bytes */
+  uint8 project_name[16];         /* 16 bytes */
+  uint8 carrier[16];              /* 16 bytes */
+  uint8 mcfg_carrier[12];         /* 12 bytes */
   uint32 fota_mode;               /*  4 bytes */
   uint32 fota_conf;               /*  4 bytes */
-  uint8 model_name[16];           /*  16 bytes */
-  /* 148 bytes */
+  uint8 model_name[16];           /* 16 bytes */
+  uint8 embbeded_call_prof_num;   /*  1 bytes */
+  uint8 rndis_mac[6];             /*  6 bytes */
+  uint32 net_conf[8];             /* 32 bytes */
+  /* 187 bytes */
+  uint8 pad_reserved[837];        /* 869 bytes */
+  /* 1024 bytes */
 }wsmem_bl_boot;
 
 /* boot_shared_imem_cookie_ptr->woorinet_magic is set by SBL and LK and cleared by LK and Kernel when boot up successfully. */
@@ -372,18 +377,154 @@ enum bsfeature{
    */
   BS_FEATURE_SKT_REP_MODE_EN,                               /* feature[1] 10 bit */
 
- /*
-  * BS_FEATURE_USB_OTG_USER_CONTROL
-  * If BS_FEATURE_USB_OTG_USER_CONTROL is set,
-  * USB Id/VBUS notifcations comes from User via sysfs.
-  */
+  /*
+   * BS_FEATURE_USB_OTG_USER_CONTROL
+   * If BS_FEATURE_USB_OTG_USER_CONTROL is set,
+   * USB Id/VBUS notifcations comes from User via sysfs.
+   */
   BS_FEATURE_USB_OTG_USER_CONTROL,                          /* feature[1] 11 bit */
+
+  /*
+   * BS_FEATURE_M2_RESET_PIN_DISABLE
+   * If BS_FEATURE_M2_RESET_PIN_DISABLE is set,
+   * disable SDX PM_GPIO_14 reset.
+   */
+  BS_FEATURE_M2_RESET_PIN_DISABLE,                          /* feature[1] 12 bit */
+
+  /*
+   * BS_FEATURE_DEBUG_TRANSPORT_TO_PCIE_EN
+   * If BS_FEATURE_DEBUG_TRANSPORT_TO_PCIE_EN is set,
+   * Debug transport mode is set to pcie
+   */
+  BS_FEATURE_DEBUG_TRANSPORT_TO_PCIE_EN,                    /* feature[1] 13 bit */
+
+  /*
+   * For Private 5G Network
+   */
+  BS_FEATURE_PRIVATE_NR_SUPPORT_EN,                         /* feature[1] 14 bit */
+
+  /*
+   * For FR2 Support
+   */
+  BS_FEATURE_FR2_SUPPORT_EN,                                /* feature[1] 15 bit */
+
+  /*
+   * BS_FEATURE_PCIE_VOLTAGE_SEL_DIS
+   *
+   * If BS_FEATURE_PCIE_VOLTAGE_SEL_DIS is clear,
+   * Contrl SDX GPIO5 to select PCIE voltage level.
+   *
+   * V1.8 is set when BS_FEATURE_PCIE_VOLAGE_SELECT_DIS is FALSE,
+   * and BS_FEATURE_PCIE_VOLTAGE_3P3_EN is FALSE.
+   * V3.3 is set when BS_FEATURE_PCIE_VOLAGE_SELECT_DIS is FALSE,
+   * and BS_FEATURE_PCIE_VOLTAGE_3P3_EN is TRUE.
+   *
+   */
+  BS_FEATURE_PCIE_VOLTAGE_SEL_DIS,                          /* feature[1] 16 bit */
+
+  /*
+   * BS_FEATURE_PCIE_VOLTAGE_3P3_EN
+   *
+   * Control SDX GPIO5 to select PCIE voltage level
+   *
+   * V1.8 is set when BS_FEATURE_PCIE_VOLAGE_SELECT_DIS is FALSE,
+   * and BS_FEATURE_PCIE_VOLTAGE_3P3_EN is FALSE.
+   * V3.3 is set when BS_FEATURE_PCIE_VOLAGE_SELECT_DIS is FALSE,
+   * and BS_FEATURE_PCIE_VOLTAGE_3P3_EN is TRUE.
+   *
+   * Note:
+   *  BS_FEATURE_PCIE_VOLTAGE_SEL_DIS must be clear
+   */
+  BS_FEATURE_PCIE_VOLTAGE_3P3_EN,                            /* feature[1] 17 bit */
+
+  /*
+   * FEATURE_SKY_CP_NETWORK_ACCESS_RESTRICT
+   */
+  BS_FEATURE_HOME_ACCESS_ONLY,                               /* feature[1] 18 bit */
+
+  /*
+   * BS_FEATURE_GNSS_ANT_CONTROL_HIGH
+   * if BS_FEATURE_GNSS_ANT_CONTROL_HIGH is set, control GNSS antenna GPIO HIGH.
+   */
+  BS_FEATURE_GNSS_ANT_CONTROL_HIGH,                          /* feature[1] 19 bit */
+
+  /*
+   * BS_FEATURE_FACTORY_RESET_KEY_DIS
+   * If BS_FEATURE_GNSS_ANT_CONTROL_HIGH is set,
+   * GPIO 32 HIGH is not working for Facktory Reset.
+   */
+  BS_FEATURE_FACTORY_RESET_KEY_DIS,                          /* feature[1] 20 bit */
+
+  /*
+   * BS_FEATURE_RTL8125_IPA_DIS
+   * If BS_FEATURE_RTL8125_IPA_DIS is set,
+   * Disable RTL8125 IPA
+   */
+  BS_FEATURE_RTL8125_IPA_DIS,                                /* feature[1] 21 bit */
+
+  /*
+   * BS_FEATURE_DONGLE_USB_TO_RTL8152_EN
+   * If BS_FEATURE_DONGLE_USB_TO_RTL8152_EN is set, RTL8152 USB is enabled,
+   * and SDX USB is disabled.
+   */
+  BS_FEATURE_DONGLE_USB_TO_RTL8152_EN,                       /* feature[1] 22 bit */
+
+  /*
+   * BS_FEATURE_IGNORE_DNSMASQ_EN
+   * If BS_FEATURE_IGNORE_DNSMASQ_EN is set, WWAN DNS server address is directly assgigned,then dnsmasq is ignored.
+   * and SDX USB is disabled.
+   */
+  BS_FEATURE_IGNORE_DNSMASQ_EN,                       /* feature[1] 23 bit */
+
+  /*
+   * BS_FEATURE_FIX_RMNET_DATA_INDEX_EN,
+   * If BS_FEATURE_FIX_RMNET_DATA_INDEX_EN is set, the interface name for wwan is fixed to rmnet_data0.
+   */
+  BS_FEATURE_FIX_RMNET_DATA_INDEX_EN,                       /* feature[1] 24 bit */
+
+  /*
+   * FEATURE_SKT_CP_M_ATTACH_CONTROL
+   */
+  BS_FEATURE_SKT_ATTACH_CTRL_EN,                            /* feature[1] 25 bit */
+
+  /*
+   * BS_FEATURE_DISABLE_MASQ_INDEX_EN,
+   * If BS_FEATURE_FIX_RMNET_DATA_INDEX_EN is set, the interface name for wwan is fixed to rmnet_data0.
+   */
+  BS_FEATURE_DISABLE_MASQ_EN,                       /* feature[1] 26 bit */
+
+  /*
+   * FEATURE_GMG_EN
+   */
+  BS_FEATURE_GMG_EN,                                        /* feature[1] 27 bit */
+
+  /*
+   * FEATURE_GMG_EN
+   */
+  BS_FEATURE_DNSMASQ_DAEMON_OFF_IF_DHCP_OFF_EN,                         /* feature[1] 28 bit */
+
+  /*
+   * BS_FEATURE_PCI_LINK_FAILURE_RESET_EN,
+   * When BS_FEATURE_PCI_LINK_FAILURE_RESET_EN is set,
+   * RC0 PCIe link failure will make device to reset.
+   */
+  BS_FEATURE_PCI_LINK_FAILURE_RESET_EN,                     /* feature[1] 29 bit */
+
+  /*
+   * BS_FEATURE_PCI_LINK_FAILURE_RESET_EN,
+   * When BS_FEATURE_PCI_LINK_FAILURE_RESET_EN is set,
+   * RC0 PCIe link failure will make device to reset.
+   */
+  BS_FEATURE_MCFG_DISABLE,                                  /* feature[1] 30 bit */
+
+  BS_FEATURE_AXGATE_VPN_EN,                                  /* feature[1] 31 bit */
   /* wsmem_bl_boot->feature[2] */
   /* wsmem_bl_boot->feature[3] */
   /* wsmem_bl_boot->reserved[0] */
   /* wsmem_bl_boot->reserved[1] */
   /* wsmem_bl_boot->reserved[2] */
   /* wsmem_bl_boot->reserved[3] */
+
   BS_FEATURE_MAX = 255,      /* 255 */
 };
 
@@ -432,28 +573,28 @@ enum bsfeature{
 #define WNET_FEAT2_MASK_I2C_LOW_SPEED_EN                    0x00000080
 #define WNET_FEAT2_MASK_KT_EMTC_LTE_B8_EN                   0x00000100
 #define WNET_FEAT2_MASK_VOLTE_EN                            0x00000200
-#define WNET_FEAT2_MASK_SKT_REP_MODE                        0x00000400
+#define WNET_FEAT2_MASK_SKT_REP_MODE_EN                     0x00000400
 #define WNET_FEAT2_MASK_USB_OTG_USER_CONTROL                0x00000800
-#define WNET_FEAT2_MASK_RESERVED13                          0x00001000
-#define WNET_FEAT2_MASK_RESERVED14                          0x00002000
-#define WNET_FEAT2_MASK_RESERVED15                          0x00004000
-#define WNET_FEAT2_MASK_RESERVED16                          0x00008000
-#define WNET_FEAT2_MASK_RESERVED17                          0x00010000
-#define WNET_FEAT2_MASK_RESERVED18                          0x00020000
-#define WNET_FEAT2_MASK_RESERVED19                          0x00040000
-#define WNET_FEAT2_MASK_RESERVED20                          0x00080000
-#define WNET_FEAT2_MASK_RESERVED21                          0x00100000
-#define WNET_FEAT2_MASK_RESERVED22                          0x00200000
-#define WNET_FEAT2_MASK_RESERVED23                          0x00400000
-#define WNET_FEAT2_MASK_RESERVED24                          0x00800000
-#define WNET_FEAT2_MASK_RESERVED25                          0x01000000
-#define WNET_FEAT2_MASK_RESERVED26                          0x02000000
-#define WNET_FEAT2_MASK_RESERVED27                          0x04000000
-#define WNET_FEAT2_MASK_RESERVED28                          0x08000000
-#define WNET_FEAT2_MASK_RESERVED29                          0x10000000
-#define WNET_FEAT2_MASK_RESERVED30                          0x20000000
-#define WNET_FEAT2_MASK_RESERVED31                          0x40000000
-#define WNET_FEAT2_MASK_RESERVED32                          0x80000000
+#define WNET_FEAT2_MASK_M2_RESET_PIN_DISABLE                0x00001000
+#define WNET_FEAT2_MASK_DEBUG_TRANSPORT_TO_PCIE_EN          0x00002000
+#define WNET_FEAT2_MASK_PRIVATE_NR_SUPPORT_EN               0x00004000
+#define WNET_FEAT2_MASK_FR2_SUPPORT_EN                      0x00008000
+#define WNET_FEAT2_MASK_PCIE_VOLTAGE_SEL_DIS                0x00010000
+#define WNET_FEAT2_MASK_PCIE_VOLTAGE_3P3_EN                 0x00020000
+#define WNET_FEAT2_MASK_HOME_ACCESS_ONLY                    0x00040000
+#define WNET_FEAT2_MASK_GNSS_ANT_CONTROL_HIGH               0x00080000
+#define WNET_FEAT2_MASK_FACTORY_RESET_KEY_DIS               0x00100000
+#define WNET_FEAT2_MASK_RTL8125_IPA_DIS                     0x00200000
+#define WNET_FEAT2_MASK_DONGLE_USB_TO_RTL8152_EN            0x00400000
+#define WNET_FEAT2_MASK_IGNORE_DNSMASQ_EN                   0x00800000
+#define WNET_FEAT2_MASK_FIX_RMNET_DATA_INDEX_EN             0x01000000
+#define WNET_FEAT2_MASK_SKT_ATTACH_CTRL_EN                  0x02000000
+#define WNET_FEAT2_MASK_DISABLE_MASQ_EN                     0x04000000
+#define WNET_FEAT2_MASK_GMG_EN                              0x08000000
+#define WNET_FEAT2_MASK_DNSMASQ_DAEMON_OFF_IF_DHCP_OFF_EN   0x10000000
+#define WNET_FEAT2_MASK_PCI_LINK_FAILURE_RESET_EN           0x20000000
+#define WNET_FEAT2_MASK_MCFG_DISABLE                        0x40000000
+#define WNET_FEAT2_MASK_AXGATE_VPN_EN                       0x80000000
 
 /* wsmem_bl_boot->supported_feature3 MASK */
 #define WNET_FEAT3_MASK_RESERVED1                           0x00000001

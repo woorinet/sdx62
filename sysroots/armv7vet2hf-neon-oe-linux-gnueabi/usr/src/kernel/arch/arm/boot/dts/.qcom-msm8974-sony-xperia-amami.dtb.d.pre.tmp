@@ -1,0 +1,17 @@
+qcom-msm8974-sony-xperia-amami.o: \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-msm8974-sony-xperia-amami.dts \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-msm8974.dtsi \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/interrupt-controller/arm-gic.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/interrupt-controller/irq.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/clock/qcom,gcc-msm8974.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/clock/qcom,mmcc-msm8974.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/clock/qcom,rpmcc.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/reset/qcom,gcc-msm8974.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/gpio/gpio.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-pm8841.dtsi \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/spmi/spmi.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/boot/dts/qcom-pm8941.dtsi \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/iio/qcom,spmi-vadc.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/input/input.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/input/linux-event-codes.h \
+ /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/dtc/include-prefixes/dt-bindings/pinctrl/qcom,pmic-gpio.h

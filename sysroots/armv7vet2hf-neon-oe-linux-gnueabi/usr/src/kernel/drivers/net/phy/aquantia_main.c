@@ -22,6 +22,11 @@
 #define PHY_ID_AQR107	0x03a1b4e0
 #define PHY_ID_AQCS109	0x03a1b5c2
 #define PHY_ID_AQR405	0x03a1b4b0
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+#define PHY_ID_AQR113C	0x31c31c12
+#endif /* CONFIG_WOORINET */
+/* WOORINET STOP */
 
 #define MDIO_PHYXS_VEND_IF_STATUS		0xe812
 #define MDIO_PHYXS_VEND_IF_STATUS_TYPE_MASK	GENMASK(7, 3)
@@ -34,6 +39,8 @@
 #define MDIO_AN_VEND_PROV			0xc400
 #define MDIO_AN_VEND_PROV_1000BASET_FULL	BIT(15)
 #define MDIO_AN_VEND_PROV_1000BASET_HALF	BIT(14)
+#define MDIO_AN_VEND_PROV_5000BASET_FULL	BIT(11)
+#define MDIO_AN_VEND_PROV_2500BASET_FULL	BIT(10)
 #define MDIO_AN_VEND_PROV_DOWNSHIFT_EN		BIT(4)
 #define MDIO_AN_VEND_PROV_DOWNSHIFT_MASK	GENMASK(3, 0)
 #define MDIO_AN_VEND_PROV_DOWNSHIFT_DFLT	4
@@ -230,9 +237,20 @@ static int aqr_config_aneg(struct phy_device *phydev)
 			      phydev->advertising))
 		reg |= MDIO_AN_VEND_PROV_1000BASET_HALF;
 
+	/* Handle the case when the 2.5G and 5G speeds are not advertised */
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_2500baseT_Full_BIT,
+			      phydev->advertising))
+		reg |= MDIO_AN_VEND_PROV_2500BASET_FULL;
+
+	if (linkmode_test_bit(ETHTOOL_LINK_MODE_5000baseT_Full_BIT,
+			      phydev->advertising))
+		reg |= MDIO_AN_VEND_PROV_5000BASET_FULL;
+
 	ret = phy_modify_mmd_changed(phydev, MDIO_MMD_AN, MDIO_AN_VEND_PROV,
 				     MDIO_AN_VEND_PROV_1000BASET_HALF |
-				     MDIO_AN_VEND_PROV_1000BASET_FULL, reg);
+				     MDIO_AN_VEND_PROV_1000BASET_FULL |
+				     MDIO_AN_VEND_PROV_2500BASET_FULL |
+				     MDIO_AN_VEND_PROV_5000BASET_FULL, reg);
 	if (ret < 0)
 		return ret;
 	if (ret > 0)
@@ -536,6 +554,57 @@ static int aqcs109_config_init(struct phy_device *phydev)
 	return aqr107_set_downshift(phydev, MDIO_AN_VEND_PROV_DOWNSHIFT_DFLT);
 }
 
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+static int aqr113_fix_provisioning(struct phy_device *phydev)
+{
+	int config_regs[] = {0x31B, 0x31C, 0x31D, 0x31E, 0x31F};
+	int i, val = 0;
+
+	for (i = 0; i < ARRAY_SIZE(config_regs); i++) {
+		val = phy_read_mmd(phydev, MDIO_MMD_VEND1, config_regs[i]);
+		printk(KERN_INFO"Set provisioning for reg:%x old value=%x\n", config_regs[i], val);
+		/* Enabling EEE provisioning */
+		val |= BIT(11);
+
+		printk(KERN_INFO"Set provisioning for reg:%x new value=%x\n", config_regs[i], val);
+		phy_write_mmd(phydev, MDIO_MMD_VEND1, config_regs[i], val);
+	}
+
+	return 0;
+}
+
+static int aqr113_config_init(struct phy_device *phydev)
+{
+	int ret;
+
+	/* Check that the PHY interface type is compatible */
+	if (phydev->interface != PHY_INTERFACE_MODE_SGMII &&
+	    phydev->interface != PHY_INTERFACE_MODE_2500BASEX &&
+	    phydev->interface != PHY_INTERFACE_MODE_XGMII &&
+	    phydev->interface != PHY_INTERFACE_MODE_USXGMII &&
+	    phydev->interface != PHY_INTERFACE_MODE_10GKR)
+		return -ENODEV;
+
+	WARN(phydev->interface == PHY_INTERFACE_MODE_XGMII,
+	     "Your devicetree is out of date, please update it. The AQR107 family doesn't support XGMII, maybe you mean USXGMII.\n");
+
+	phydev->is_c45 = true;
+
+	aqr113_fix_provisioning(phydev);
+
+	ret = aqr107_wait_reset_complete(phydev);
+	if (!ret)
+		aqr107_chip_info(phydev);
+
+	linkmode_copy(phydev->advertising, phydev->supported);
+	/* ensure that a latched downshift event is cleared */
+	aqr107_read_downshift_event(phydev);
+
+	return aqr107_set_downshift(phydev, MDIO_AN_VEND_PROV_DOWNSHIFT_DFLT);
+}
+#endif /* CONFIG_WOORINET */
+/* WOORINET STOP */
 static void aqr107_link_change_notify(struct phy_device *phydev)
 {
 	u8 fw_major, fw_minor;
@@ -600,6 +669,13 @@ static int aqr107_probe(struct phy_device *phydev)
 	if (!phydev->priv)
 		return -ENOMEM;
 
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	/* To trigger renegotiation when link toggled */
+	phydev->is_c45 = true;
+	phydev->c45_ids.devices_in_package = MDIO_DEVS_AN;
+#endif /* CONFIG_WOORINET */
+/* WOORINET STOP */
 	return aqr_hwmon_probe(phydev);
 }
 
@@ -682,6 +758,28 @@ static struct phy_driver aqr_driver[] = {
 	.ack_interrupt	= aqr_ack_interrupt,
 	.read_status	= aqr_read_status,
 },
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+{
+	PHY_ID_MATCH_MODEL(PHY_ID_AQR113C),
+	.name		= "Aquantia AQR113C",
+	.probe		= aqr107_probe,
+	.config_init	= aqr113_config_init,
+	.config_aneg    = aqr_config_aneg,
+	.config_intr	= aqr_config_intr,
+	.ack_interrupt	= aqr_ack_interrupt,
+	.read_status	= aqr107_read_status,
+	.get_tunable    = aqr107_get_tunable,
+	.set_tunable    = aqr107_set_tunable,
+	.suspend	= aqr107_suspend,
+	.resume		= aqr107_resume,
+	.get_sset_count	= aqr107_get_sset_count,
+	.get_strings	= aqr107_get_strings,
+	.get_stats	= aqr107_get_stats,
+	.link_change_notify = aqr107_link_change_notify,
+},
+#endif
+/* WOORINET STOP */
 };
 
 module_phy_driver(aqr_driver);
@@ -694,6 +792,11 @@ static struct mdio_device_id __maybe_unused aqr_tbl[] = {
 	{ PHY_ID_MATCH_MODEL(PHY_ID_AQR107) },
 	{ PHY_ID_MATCH_MODEL(PHY_ID_AQCS109) },
 	{ PHY_ID_MATCH_MODEL(PHY_ID_AQR405) },
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	{ PHY_ID_MATCH_MODEL(PHY_ID_AQR113C) },
+#endif
+/* WOORINET STOP */
 	{ }
 };
 

@@ -5,7 +5,7 @@
 # r8168 is the Linux device driver released for Realtek Gigabit Ethernet
 # controllers with PCI-Express interface.
 #
-# Copyright(c) 2021 Realtek Semiconductor Corp. All rights reserved.
+# Copyright(c) 2022 Realtek Semiconductor Corp. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -41,6 +41,8 @@ enum rtl8125_rss_register_content {
         RSS_CTRL_IPV4_SUPP  = (1 << 1),
         RSS_CTRL_TCP_IPV6_SUPP  = (1 << 2),
         RSS_CTRL_IPV6_SUPP  = (1 << 3),
+        RSS_CTRL_IPV6_EXT_SUPP  = (1 << 4),
+        RSS_CTRL_TCP_IPV6_EXT_SUPP  = (1 << 5),
         RSS_HALF_SUPP  = (1 << 7),
         RSS_CTRL_UDP_IPV4_SUPP  = (1 << 11),
         RSS_CTRL_UDP_IPV6_SUPP  = (1 << 12),
@@ -131,7 +133,9 @@ static int _rtl8125_set_rss_hash_opt(struct rtl8125_private *tp)
         rss_ctrl |= RSS_CTRL_TCP_IPV4_SUPP
                     | RSS_CTRL_IPV4_SUPP
                     | RSS_CTRL_IPV6_SUPP
-                    | RSS_CTRL_TCP_IPV6_SUPP;
+                    | RSS_CTRL_IPV6_EXT_SUPP
+                    | RSS_CTRL_TCP_IPV6_SUPP
+                    | RSS_CTRL_TCP_IPV6_EXT_SUPP;
 
         if (rss_flags & RTL_8125_RSS_FLAG_HASH_UDP_IPV4)
                 rss_ctrl |= RSS_CTRL_UDP_IPV4_SUPP;
@@ -239,7 +243,9 @@ static int rtl8125_set_rss_hash_opt(struct rtl8125_private *tp,
                 rss_ctrl |= RSS_CTRL_TCP_IPV4_SUPP
                             | RSS_CTRL_IPV4_SUPP
                             | RSS_CTRL_IPV6_SUPP
-                            | RSS_CTRL_TCP_IPV6_SUPP;
+                            | RSS_CTRL_IPV6_EXT_SUPP
+                            | RSS_CTRL_TCP_IPV6_SUPP
+                            | RSS_CTRL_TCP_IPV6_EXT_SUPP;
 
                 rss_ctrl &= ~(RSS_CTRL_UDP_IPV4_SUPP |
                               RSS_CTRL_UDP_IPV6_SUPP);

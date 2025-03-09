@@ -1,5 +1,5 @@
 /*
- * This was automagically generated from /opt/sdx65/apps_proc/build-qti-distro-nogplv3-debug/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/tools/mach-types!
+ * This was automagically generated from /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/arch/arm/tools/mach-types!
  * Do NOT edit
  */
 

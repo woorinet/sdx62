@@ -95,7 +95,7 @@ static DEFINE_SPINLOCK(ubi_devices_lock);
 static ssize_t version_show(struct class *class, struct class_attribute *attr,
 			    char *buf)
 {
-	return scnprintf(buf, sizeof(int), "%d\n", UBI_VERSION);
+	return scnprintf(buf, PAGE_SIZE, "%d\n", UBI_VERSION);
 }
 static CLASS_ATTR_RO(version);
 
@@ -371,59 +371,55 @@ static ssize_t dev_attribute_show(struct device *dev,
 	 * we still can use 'ubi->ubi_num'.
 	 */
 	ubi = container_of(dev, struct ubi_device, dev);
-	ubi = ubi_get_device(ubi->ubi_num);
-	if (!ubi)
-		return -ENODEV;
 
 	if (attr == &dev_eraseblock_size)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->leb_size);
 	else if (attr == &dev_avail_eraseblocks)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->avail_pebs);
 	else if (attr == &dev_total_eraseblocks)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->good_peb_count);
 	else if (attr == &dev_volumes_count)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 			ubi->vol_count - UBI_INT_VOL_COUNT);
 	else if (attr == &dev_max_ec)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->max_ec);
 	else if (attr == &dev_reserved_for_bad)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->beb_rsvd_pebs);
 	else if (attr == &dev_bad_peb_count)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->bad_peb_count);
 	else if (attr == &dev_max_vol_count)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->vtbl_slots);
 	else if (attr == &dev_min_io_size)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->min_io_size);
 	else if (attr == &dev_bgt_enabled)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->thread_enabled);
 	else if (attr == &dev_mtd_num)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->mtd->index);
 	else if (attr == &dev_ro_mode)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				ubi->ro_mode);
 	else if (attr == &dev_mtd_trigger_scrub)
-		ret = scnprintf(buf, sizeof(int), "%d\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%d\n",
 				atomic_read(&ubi->scrub_work_count));
 	else if (attr == &dev_mtd_max_scrub_sqnum)
-		ret = scnprintf(buf, sizeof(unsigned long long), "%llu\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%llu\n",
 				get_max_sqnum(ubi));
 	else if (attr == &dev_mtd_min_scrub_sqnum)
-		ret = scnprintf(buf, sizeof(unsigned long long), "%llu\n",
+		ret = scnprintf(buf, PAGE_SIZE, "%llu\n",
 				ubi_wl_scrub_get_min_sqnum(ubi));
 	else
 		ret = -EINVAL;
 
-	ubi_put_device(ubi);
 	return ret;
 }
 
@@ -516,7 +512,7 @@ static int uif_init(struct ubi_device *ubi)
 	int i, err;
 	dev_t dev;
 
-	scnprintf(ubi->ubi_name, sizeof(UBI_NAME_STR) + 5,
+	scnprintf(ubi->ubi_name, sizeof(ubi->ubi_name),
 			UBI_NAME_STR "%d", ubi->ubi_num);
 
 	/*
@@ -550,6 +546,7 @@ static int uif_init(struct ubi_device *ubi)
 			err = ubi_add_volume(ubi, ubi->volumes[i]);
 			if (err) {
 				ubi_err(ubi, "cannot add volume %d", i);
+				ubi->volumes[i] = NULL;
 				goto out_volumes;
 			}
 		}
@@ -743,6 +740,21 @@ static int io_init(struct ubi_device *ubi, int max_beb_per1024)
 						ubi->vid_hdr_aloffset;
 	}
 
+	/*
+	 * Memory allocation for VID header is ubi->vid_hdr_alsize
+	 * which is described in comments in io.c.
+	 * Make sure VID header shift + UBI_VID_HDR_SIZE not exceeds
+	 * ubi->vid_hdr_alsize, so that all vid header operations
+	 * won't access memory out of bounds.
+	 */
+	if ((ubi->vid_hdr_shift + UBI_VID_HDR_SIZE) > ubi->vid_hdr_alsize) {
+		ubi_err(ubi, "Invalid VID header offset %d, VID header shift(%d)"
+			" + VID header size(%zu) > VID header aligned size(%d).",
+			ubi->vid_hdr_offset, ubi->vid_hdr_shift,
+			UBI_VID_HDR_SIZE, ubi->vid_hdr_alsize);
+		return -EINVAL;
+	}
+
 	/* Similar for the data offset */
 	ubi->leb_start = ubi->vid_hdr_offset + UBI_VID_HDR_SIZE;
 	ubi->leb_start = ALIGN(ubi->leb_start, ubi->min_io_size);
@@ -932,6 +944,13 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
 		return -EINVAL;
 	}
 
+	/* UBI cannot work on flashes with zero erasesize. */
+	if (!mtd->erasesize) {
+		pr_err("ubi: refuse attaching mtd%d - zero erasesize flash is not supported\n",
+			mtd->index);
+		return -EINVAL;
+	}
+
 	if (ubi_num == UBI_DEV_NUM_AUTO) {
 		/* Search for an empty slot in the @ubi_devices array */
 		for (ubi_num = 0; ubi_num < UBI_MAX_DEVICES; ubi_num++)
@@ -1035,9 +1054,6 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
 			goto out_detach;
 	}
 
-	/* Make device "available" before it becomes accessible via sysfs */
-	ubi_devices[ubi_num] = ubi;
-
 	err = uif_init(ubi);
 	if (err)
 		goto out_detach;
@@ -1082,6 +1098,7 @@ int ubi_attach_mtd_dev(struct mtd_info *mtd, int ubi_num,
 	wake_up_process(ubi->bgt_thread);
 	spin_unlock(&ubi->wl_lock);
 
+	ubi_devices[ubi_num] = ubi;
 	ubi_notify_all(ubi, UBI_VOLUME_ADDED, NULL);
 	return ubi_num;
 
@@ -1090,7 +1107,6 @@ out_debugfs:
 out_uif:
 	uif_close(ubi);
 out_detach:
-	ubi_devices[ubi_num] = NULL;
 	ubi_wl_close(ubi);
 	ubi_free_internal_volumes(ubi);
 	vfree(ubi->vtbl);

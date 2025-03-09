@@ -75,7 +75,13 @@
  *  VERSION     : 01-00-38
  *  31 Jan 2022 : 1. Additional macros defined for debug dump API usage.
  *  VERSION     : 01-00-39
- */
+ *  04 Feb 2021 : 1. Ethtool statistics added to print doorbell SRAM area for all the channels.
+ *  VERSION     : 01-00-41
+ *  14 Feb 2021 : 1. Reset assert and clock disable support during Link Down.
+ *  VERSION     : 01-00-42
+ *  06 Apr 2022 : 1.Max MTU supported is 2000 bytes.
+ *  VERSION     : 01-00-48
+*/
 
 #ifndef __COMMON_H__
 #define __COMMON_H__
@@ -106,12 +112,19 @@
 #define TC956X_MAX_PORT			2
 #define TC956X_ALL_MAC_PORT_SUSPENDED 	0 /* All EMAC Port Suspended. To be used just after suspend and before resume. */
 #define TC956X_NO_MAC_DEVICE_IN_USE	0 /* No EMAC Port in use. To be used at probe and remove. */
-
+#define TC956X_ALL_MAC_PORT_LINK_DOWN	2 /* All ports are Link Down */
 /* Suspend-Resume Arguments */
 enum TC956X_PORT_PM_STATE {
 	SUSPEND = 0,
 	RESUME,
 };
+
+/* Link Down Change Power State Arguments */
+enum TC956X_PORT_LINK_CHANGE_STATE {
+	LINK_DOWN = 0,
+	LINK_UP,
+};
+
 //#define TC956X_PCIE_LINK_STATE_LATENCY_CTRL
 
 #define DISABLE		0
@@ -728,6 +741,16 @@ enum packets_types {
 #define NCLKCTRL0_DEFAULT 	(NCLKCTRL0_SRMCEM | NCLKCTRL0_I2SSPIEN | \
 					NCLKCTRL0_PCIECEN | NCLKCTRL0_MCUCEN)
 #define NBUSCTRL_OFFSET		(0x1014)
+
+#define NRSTCTRL_LINK_DOWN		(NRSTCTRL0_MAC0PMARST | NRSTCTRL0_MAC0PONRST)
+#define NCLKCTRL_LINK_DOWN		(NCLKCTRL0_MAC0TXCEN | NCLKCTRL0_MAC0RXCEN | \
+						NCLKCTRL0_MAC0125CLKEN | NCLKCTRL0_MAC0312CLKEN | \
+						NCLKCTRL1_MAC1RMCEN)
+#define NRSTCTRL_LINK_DOWN_SAVE			(0xC0000080U) /* Save Non-Common Reset Register Bits Between Port 0 and Port 1 */
+#define NCLKCTRL_LINK_DOWN_SAVE			(0xE000C080U) /* Save Non-Common Clock Register Bits Between Port 0 and Port 1 */
+#define NRSTCTRL_LINK_DOWN_CMN_SAVE		(0x00051213U) /* Save Common Reset Register Bits Between Port 0 and Port 1 */
+#define NCLKCTRL_LINK_DOWN_CMN_SAVE		(0x07053211U) /* Save Common Clock Register Bits Between Port 0 and Port 1 */
+
 #endif
 
 #define NSPLLPARAM_OFFSET	(0x1020) /* TC956X System PLL parameters */
@@ -1170,7 +1193,8 @@ entry delay = n * 256 ns */
 #define TC956X_HOST_PHYSICAL_ADRS_MASK	(0x10) /* bit no 37: (1<<36) */
 
 #define ETHNORMAL_LEN		1500
-#define MAX_SUPPORTED_MTU	(ETH_FRAME_LEN + ETH_FCS_LEN + VLAN_HLEN)
+/*Max supported MTU limited to 2000, not 'ETH_FRAME_LEN + ETH_FCS_LEN + VLAN_HLEN' */
+#define MAX_SUPPORTED_MTU	2000 /*(ETH_FRAME_LEN + ETH_FCS_LEN + VLAN_HLEN)*/
 #define MIN_SUPPORTED_MTU	(ETH_ZLEN + ETH_FCS_LEN + VLAN_HLEN)
 
 #define HOST_MAC_ADDR_OFFSET 2
@@ -1379,6 +1403,10 @@ struct tc956xmac_extra_stats {
 	u64 m3_tx_timeout_port0;
 	u64 m3_tx_timeout_port1;
 	u64 m3_debug_cnt19;
+	u64 m3_tx_pcie_addr_loc_port0[TC956XMAC_CH_MAX];
+	u64 m3_tx_pcie_addr_loc_port1[TC956XMAC_CH_MAX];
+	u64 m3_rx_pcie_addr_loc_port0[TC956XMAC_CH_MAX];
+	u64 m3_rx_pcie_addr_loc_port1[TC956XMAC_CH_MAX];
 
 };
 

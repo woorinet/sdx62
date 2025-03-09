@@ -78,9 +78,17 @@ static void ioss_net_check_active(struct ioss_interface *iface)
 static void __netdev_get_stats64(struct net_device *net_dev,
 		struct rtnl_link_stats64 *stats)
 {
-	struct ioss_interface *iface = ioss_netdev_to_iface(net_dev);
-	const struct net_device_ops *real_ops = iface->netdev_ops_real;
+	struct ioss_interface *iface = NULL;
+	const struct net_device_ops *real_ops = NULL;
 
+	if (!net_dev)
+		return;
+
+	iface = ioss_netdev_to_iface(net_dev);
+	if (!iface)
+		return;
+
+	real_ops = iface->netdev_ops_real;
 	/* Retrieve stats for direct software path. Modeled after kernel API
 	 * dev_get_stats().
 	 */
@@ -99,7 +107,14 @@ static void __netdev_get_stats64(struct net_device *net_dev,
 
 static void __hijack_netdev_ops(struct ioss_interface *iface)
 {
-	struct net_device *net_dev = ioss_iface_to_netdev(iface);
+	struct net_device *net_dev = NULL;
+
+	if(!iface)
+		return;
+
+	net_dev = ioss_iface_to_netdev(iface);
+	if (!net_dev)
+		return;
 
 	iface->netdev_ops_real = net_dev->netdev_ops;
 	iface->netdev_ops = *iface->netdev_ops_real;
@@ -111,7 +126,16 @@ static void __hijack_netdev_ops(struct ioss_interface *iface)
 
 static void __restore_netdev_ops(struct ioss_interface *iface)
 {
-	ioss_iface_to_netdev(iface)->netdev_ops = iface->netdev_ops_real;
+	struct net_device *net_dev = NULL;
+
+	if (!iface)
+		return ;
+
+	net_dev = ioss_iface_to_netdev(iface);
+	if (!net_dev)
+		return ;
+
+	net_dev->netdev_ops = iface->netdev_ops_real;
 }
 
 static int __pm_notifier_cb(struct notifier_block *nb,
@@ -596,7 +620,7 @@ static int ioss_net_teardown_events(struct ioss_interface *iface)
 	return rc;
 }
 
-static void ioss_iface_set_online(struct ioss_interface *iface)
+void ioss_iface_set_online(struct ioss_interface *iface)
 {
 	int rc;
 	struct ioss_device *idev = ioss_iface_dev(iface);
@@ -659,7 +683,7 @@ err_alloc_channels:
 	return;
 }
 
-static void ioss_iface_set_offline(struct ioss_interface *iface)
+void ioss_iface_set_offline(struct ioss_interface *iface)
 {
 	int rc;
 	struct ioss_device *idev = ioss_iface_dev(iface);
@@ -783,6 +807,14 @@ int ioss_net_watch_device(struct ioss_device *idev)
 	if (rc) {
 		ioss_dev_err(idev,
 			"Failed to register netdev notifier for %s",
+			idev->net_dev->name);
+		goto err_register;
+	}
+
+	rc = ioss_debugfs_add_vlan_tag_filter(idev);
+	if (rc) {
+		ioss_dev_err(idev,
+			"Failed in creating debugfs node for vlan_tag_filter for %s",
 			idev->net_dev->name);
 		goto err_register;
 	}

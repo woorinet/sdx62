@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2012-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/ipa.h>
@@ -1132,7 +1133,7 @@ static inline void ipa_fltrt_get_mac_data(const struct ipa_rule_attrib *attrib,
 	}
 
 	if (attrib_mask & IPA_FLT_MAC_SRC_ADDR_802_1Q) {
-		*offset = -10;
+		*offset = -12;
 		*mac_addr = attrib->src_mac_addr;
 		*mac_addr_mask = attrib->src_mac_addr_mask;
 		return;
@@ -2902,6 +2903,172 @@ static int ipa_flt_generate_eq_ip4(enum ipa_ip_type ip,
 		eq_atrb->ipv4_frag_eq_present = 1;
 	}
 
+#ifdef IPA_FLT_EXT_MPLS_GRE_GENERAL
+	if ( attrib->ext_attrib_mask & IPA_FLT_EXT_MPLS_GRE_GENERAL ) {
+		ipa_fld_wid_off_t* fwo;
+		int32_t            offset, oo, rmndr;
+		uint32_t           row, mask, cmp_wid, shift, value;
+		uint32_t p4_ex;
+
+		value = attrib->fld_val_eq.value;
+
+		if(attrib->p_exception == PPPOE_EXCEPTION &&
+				attrib->fld_val_eq.flow ==
+				FLOW_DOWNLINK) {
+			if (attrib->fld_val_eq.field == FIELD_IP_PROTOCOL)
+				p4_ex = FIELD_IP_PROTOCOL_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_UDP_SRC_PORT)
+				p4_ex = FIELD_UDP_SRC_PORT_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_UDP_DST_PORT)
+				p4_ex = FIELD_UDP_DST_PORT_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_TCP_DST_PORT)
+				p4_ex = FIELD_TCP_DST_PORT_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_TCP_DST_PORT)
+				p4_ex = FIELD_TCP_DST_PORT_PPPOE;
+
+			fwo = get_mpls_p_v4_outer(attrib->fld_val_eq.flow,
+					attrib->fld_val_eq.inner_iptype,
+					p4_ex);
+		} else {
+			fwo = get_mpls_v4_outer(attrib->fld_val_eq.flow,
+					attrib->fld_val_eq.inner_iptype,
+					attrib->fld_val_eq.field);
+		}
+
+		cmp_wid = fwo->width;
+		offset  = fwo->offset;
+		rmndr   = abs(offset) % sizeof(uint32_t);
+
+		IPAHAL_DBG(
+			"wid=(%u) raw offset=(%d) rmndr=(%d)\n",
+			cmp_wid,
+			offset,
+			rmndr);
+
+		/*
+		 * The offset and shift (for mask and value) calculations
+		 * below are necessary because the IPA wants offsets to be on
+		 * 4 byte (ie. 32-bit word) boundaries.  Values are found in
+		 * the 32-bit word by the position of the mask/value bits post
+		 * shift.
+		 *
+		 * Example:
+		 *
+		 *    +----+----+----+----+
+		 *    |    |    |    |    |
+		 *    +----+----+----+----+
+		 *      b0   b1   b2   b3
+		 *
+		 *   If we're looking for a single byte value at b3, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0x000000FF value would be 0x000000XX
+		 *        where XX is the byte value you're looking for.
+		 *
+		 *   If we're looking for a single byte value at b2, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0x0000FF00 value would be 0x0000XX00
+		 *        where XX is the byte value you're looking for.
+		 *
+		 *   If we're looking for a single byte value at b1, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0x00FF0000 value would be 0x00XX0000
+		 *        where XX is the byte value you're looking for.
+		 *
+		 *   If we're looking for a single byte value at b0, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0xFF000000 value would be 0xXX000000
+		 *        where XX is the byte value you're looking for.
+		 */
+		oo = offset;
+
+		if ( rmndr ) {
+			if ( offset < 0 ) {
+				offset = offset - (sizeof(uint32_t) - rmndr);
+			} else {
+				offset -= rmndr;
+			}
+		}
+
+		if ( offset < 0 ) {
+			rmndr = abs(offset) - abs(oo);
+		} else {
+			rmndr = oo - offset;
+		}
+
+		IPAHAL_DBG(
+			"oo=(%d) rmndr=(%d) offset=(%d)\n",
+			oo,
+			rmndr,
+			offset);
+
+		shift = ((sizeof(uint32_t) - rmndr) - cmp_wid) * 8;
+
+		switch ( cmp_wid )
+		{
+		case ONE_BYTE:
+			mask = 0x000000FF;
+			break;
+		case TWO_BYTE:
+			mask = 0x0000FFFF;
+			break;
+		default:  /* FOUR_BYTE */
+			mask  = 0xFFFFFFFF;
+			shift = 0;
+			break;
+		}
+
+		mask  = (mask  << shift);
+		value = (value << shift);
+
+		if(attrib->p_exception == PPPOE_EXCEPTION) {
+			IPAHAL_DBG(
+				"outerIP=(v4) flow=(%s) innerIP=(%s) field=(%s)"
+				"value=(%08X) wid=(%u) adj offset=(%d)"
+				"mask=(%08X) val=(%08X)\n",
+				flow_type_as_str(attrib->fld_val_eq.flow),
+				ipa_ip_type_as_str(attrib->fld_val_eq.inner_iptype),
+				pppoe_exception_type_as_str(p4_ex),
+				attrib->fld_val_eq.value,
+				cmp_wid,
+				offset,
+				mask,
+				value);
+		} else {
+			IPAHAL_DBG(
+				"outerIP=(v4) flow=(%s) innerIP=(%s) field=(%s)"
+				"value=(%08X) wid=(%u) adj offset=(%d)"
+				"mask=(%08X) val=(%08X)\n",
+				flow_type_as_str(attrib->fld_val_eq.flow),
+				ipa_ip_type_as_str(attrib->fld_val_eq.inner_iptype),
+				exception_type_as_str(attrib->fld_val_eq.field),
+				attrib->fld_val_eq.value,
+				cmp_wid,
+				offset,
+				mask,
+				value);
+		}
+
+		if (IPA_IS_RAN_OUT_OF_EQ(ipa3_0_ihl_ofst_meq32, ihl_ofst_meq32)) {
+			IPAHAL_ERR("ran out of ihl_meq32 eq\n");
+			return -EPERM;
+		}
+		*en_rule |= IPA_GET_RULE_EQ_BIT_PTRN(
+			ipa3_0_ihl_ofst_meq32[ihl_ofst_meq32]);
+		eq_atrb->ihl_offset_meq_32[ihl_ofst_meq32].offset = offset;
+		eq_atrb->ihl_offset_meq_32[ihl_ofst_meq32].mask   = mask;
+		eq_atrb->ihl_offset_meq_32[ihl_ofst_meq32].value  = value;
+		ihl_ofst_meq32++;
+	}
+#endif
+
 	if (attrib->attrib_mask & IPA_FLT_TOS && !tos_done) {
 		IPAHAL_ERR("could not find equation for tos\n");
 		return -EPERM;
@@ -3370,6 +3537,172 @@ static int ipa_flt_generate_eq_ip6(enum ipa_ip_type ip,
 			IPA_IS_FRAG);
 		eq_atrb->ipv4_frag_eq_present = 1;
 	}
+
+#ifdef IPA_FLT_EXT_MPLS_GRE_GENERAL
+	if ( attrib->ext_attrib_mask & IPA_FLT_EXT_MPLS_GRE_GENERAL ) {
+		ipa_fld_wid_off_t* fwo;
+		int32_t            offset, oo, rmndr;
+		uint32_t           row, mask, cmp_wid, shift, value;
+		uint32_t p6_ex;
+
+		value = attrib->fld_val_eq.value;
+
+		if(attrib->p_exception == PPPOE_EXCEPTION &&
+				attrib->fld_val_eq.flow ==
+				FLOW_DOWNLINK) {
+			if (attrib->fld_val_eq.field == FIELD_IP_PROTOCOL)
+				p6_ex = FIELD_IP_PROTOCOL_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_UDP_SRC_PORT)
+				p6_ex = FIELD_UDP_SRC_PORT_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_UDP_DST_PORT)
+				p6_ex = FIELD_UDP_DST_PORT_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_TCP_DST_PORT)
+				p6_ex = FIELD_TCP_DST_PORT_PPPOE;
+			else if (attrib->fld_val_eq.field ==
+					FIELD_TCP_DST_PORT)
+				p6_ex = FIELD_TCP_DST_PORT_PPPOE;
+
+			fwo = get_mpls_p_v6_outer(attrib->fld_val_eq.flow,
+					attrib->fld_val_eq.inner_iptype,
+					p6_ex);
+		} else {
+			fwo = get_mpls_v6_outer(attrib->fld_val_eq.flow,
+					attrib->fld_val_eq.inner_iptype,
+					attrib->fld_val_eq.field);
+		}
+
+		cmp_wid = fwo->width;
+		offset  = fwo->offset;
+		rmndr   = abs(offset) % sizeof(uint32_t);
+
+		IPAHAL_DBG(
+			"wid=(%u) raw offset=(%d) rmndr=(%d)\n",
+			cmp_wid,
+			offset,
+			rmndr);
+
+		/*
+		 * The offset and shift (for mask and value) calculations
+		 * below are necessary because the IPA wants offsets to be on
+		 * 4 byte (ie. 32-bit word) boundaries.  Values are found in
+		 * the 32-bit word by the position of the mask/value bits post
+		 * shift.
+		 *
+		 * Example:
+		 *
+		 *    +----+----+----+----+
+		 *    |    |    |    |    |
+		 *    +----+----+----+----+
+		 *      b0   b1   b2   b3
+		 *
+		 *   If we're looking for a single byte value at b3, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0x000000FF value would be 0x000000XX
+		 *        where XX is the byte value you're looking for.
+		 *
+		 *   If we're looking for a single byte value at b2, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0x0000FF00 value would be 0x0000XX00
+		 *        where XX is the byte value you're looking for.
+		 *
+		 *   If we're looking for a single byte value at b1, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0x00FF0000 value would be 0x00XX0000
+		 *        where XX is the byte value you're looking for.
+		 *
+		 *   If we're looking for a single byte value at b0, then:
+		 *
+		 *     1) The offset we pass to the IPA would b0's location of 0
+		 *     2) Mask would be 0xFF000000 value would be 0xXX000000
+		 *        where XX is the byte value you're looking for.
+		 */
+		oo = offset;
+
+		if ( rmndr ) {
+			if ( offset < 0 ) {
+				offset = offset - (sizeof(uint32_t) - rmndr);
+			} else {
+				offset -= rmndr;
+			}
+		}
+
+		if ( offset < 0 ) {
+			rmndr = abs(offset) - abs(oo);
+		} else {
+			rmndr = oo - offset;
+		}
+
+		IPAHAL_DBG(
+			"oo=(%d) rmndr=(%d) offset=(%d)\n",
+			oo,
+			rmndr,
+			offset);
+
+		shift = ((sizeof(uint32_t) - rmndr) - cmp_wid) * 8;
+
+		switch ( cmp_wid )
+		{
+		case ONE_BYTE:
+			mask = 0x000000FF;
+			break;
+		case TWO_BYTE:
+			mask = 0x0000FFFF;
+			break;
+		default:  /* FOUR_BYTE */
+			mask  = 0xFFFFFFFF;
+			shift = 0;
+			break;
+		}
+
+		mask  = (mask  << shift);
+		value = (value << shift);
+
+		if(attrib->p_exception == PPPOE_EXCEPTION) {
+			IPAHAL_DBG(
+				"outerIP=(v6) flow=(%s) innerIP=(%s) field=(%s)"
+				" value=(%08X) wid=(%u) adj offset=(%d)"
+				"mask=(%08X) val=(%08X)\n",
+				flow_type_as_str(attrib->fld_val_eq.flow),
+				ipa_ip_type_as_str(attrib->fld_val_eq.inner_iptype),
+				pppoe_exception_type_as_str(p6_ex),
+				attrib->fld_val_eq.value,
+				cmp_wid,
+				offset,
+				mask,
+				value);
+		} else {
+			IPAHAL_DBG(
+				"outerIP=(v6) flow=(%s) innerIP=(%s) field=(%s)"
+				"value=(%08X) wid=(%u) adj offset=(%d)"
+				"mask=(%08X) val=(%08X)\n",
+				flow_type_as_str(attrib->fld_val_eq.flow),
+				ipa_ip_type_as_str(attrib->fld_val_eq.inner_iptype),
+				exception_type_as_str(attrib->fld_val_eq.field),
+				attrib->fld_val_eq.value,
+				cmp_wid,
+				offset,
+				mask,
+				value);
+		}
+
+		if (IPA_IS_RAN_OUT_OF_EQ(ipa3_0_ihl_ofst_meq32, ihl_ofst_meq32)) {
+			IPAHAL_ERR("ran out of ihl_meq32 eq\n");
+			return -EPERM;
+		}
+		*en_rule |= IPA_GET_RULE_EQ_BIT_PTRN(
+			ipa3_0_ihl_ofst_meq32[ihl_ofst_meq32]);
+		eq_atrb->ihl_offset_meq_32[ihl_ofst_meq32].offset = offset;
+		eq_atrb->ihl_offset_meq_32[ihl_ofst_meq32].mask   = mask;
+		eq_atrb->ihl_offset_meq_32[ihl_ofst_meq32].value  = value;
+		ihl_ofst_meq32++;
+	}
+#endif
 
 	eq_atrb->rule_eq_bitmap = *en_rule;
 	eq_atrb->num_offset_meq_32 = ofst_meq32;
@@ -4049,12 +4382,12 @@ int ipahal_fltrt_init(enum ipa_hw_type ipa_hw_type)
 		if (!IPA_IS_RULE_EQ_VALID(i))
 			continue;
 
-		if (eq_bits & IPA_GET_RULE_EQ_BIT_PTRN(eq_bitfield[i])) {
+		if (eq_bits & IPA_GET_RULE_EQ_BIT_PTRN(i)) {
 			IPAHAL_ERR("more than eq with same bit. eq=%d\n", i);
 			WARN_ON(1);
 			return -EFAULT;
 		}
-		eq_bits |= IPA_GET_RULE_EQ_BIT_PTRN(eq_bitfield[i]);
+		eq_bits |= IPA_GET_RULE_EQ_BIT_PTRN(i);
 	}
 
 	mem = &ipahal_ctx->empty_fltrt_tbl;
@@ -4267,9 +4600,13 @@ int ipahal_rt_generate_empty_img(u32 tbls_num, u32 hash_hdr_size,
 		IPAHAL_ERR("fail to alloc DMA buff of size %d\n", mem->size);
 		return -ENOMEM;
 	}
-	/* fetch empty tbl from SRAM */
-	addr = obj->create_tbl_addr(false,
-		IPA_EMPTY_SRAM_OFFSET);
+	/* fetch empty tbl from SRAM except IPA4.0 */
+	if (ipahal_ctx->hw_type == IPA_HW_v4_0)
+		addr = obj->create_tbl_addr(true,
+			ipahal_ctx->empty_fltrt_tbl.phys_base);
+	else
+		addr = obj->create_tbl_addr(false,
+			IPA_EMPTY_SRAM_OFFSET);
 	for (i = 0; i < tbls_num; i++)
 		obj->write_val_to_hdr(addr,
 			mem->base + i * obj->tbl_hdr_width);
@@ -4356,9 +4693,13 @@ int ipahal_flt_generate_empty_img(u32 tbls_num, u32 hash_hdr_size,
 		obj->write_val_to_hdr(flt_bitmap, mem->base);
 	}
 
-	/* fetch empty tbl from SRAM */
-	addr = obj->create_tbl_addr(false,
-		IPA_EMPTY_SRAM_OFFSET);
+	/* fetch empty tbl from SRAM except IPA4.0 */
+	if (ipahal_ctx->hw_type == IPA_HW_v4_0)
+		addr = obj->create_tbl_addr(true,
+			ipahal_ctx->empty_fltrt_tbl.phys_base);
+	else
+		addr = obj->create_tbl_addr(false,
+			IPA_EMPTY_SRAM_OFFSET);
 
 	if (ep_bitmap) {
 		for (i = 1; i <= tbls_num; i++)
@@ -4423,8 +4764,12 @@ alloc:
 		}
 	}
 
-	addr = obj->create_tbl_addr(false,
-		IPA_EMPTY_SRAM_OFFSET);
+	if (ipahal_ctx->hw_type == IPA_HW_v4_0)
+		addr = obj->create_tbl_addr(true,
+			ipahal_ctx->empty_fltrt_tbl.phys_base);
+	else
+		addr = obj->create_tbl_addr(false,
+			IPA_EMPTY_SRAM_OFFSET);
 	for (i = 0; i < params->tbls_num; i++) {
 		obj->write_val_to_hdr(addr,
 			params->nhash_hdr.base + i * obj->tbl_hdr_width);

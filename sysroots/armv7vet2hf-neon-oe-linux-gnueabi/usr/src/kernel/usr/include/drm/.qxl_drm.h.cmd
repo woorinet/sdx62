@@ -1,0 +1,1 @@
+cmd_usr/include/drm/qxl_drm.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/drm/qxl_drm.h usr/include/drm/qxl_drm.h

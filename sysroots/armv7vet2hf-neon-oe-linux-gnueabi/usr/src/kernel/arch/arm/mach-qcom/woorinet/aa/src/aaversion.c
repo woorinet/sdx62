@@ -21,21 +21,31 @@
 #define ARR_SIZE( a ) ( sizeof( (a) ) / sizeof( (a[0]) ) )
 #endif
 
-static const char aa_git_revision[] = "137";
-static const char aa_qti_apps_version[] = "LE.UM.5.3.2.r1-06000-SDX65.0-1";
-static const char aa_qti_version[] = "Olympic.LE.1.0.Post-CS[4.1].0.0.592.1";
-static const char aa_git_commit_id[] = "39a2d82";
-static const char aa_build_machine[] = "iot-bs109";
-static const char aa_build_date_time[] = "Mar 07 2022 15:48:23";
-static const char aa_build_date[] = "Mar 07 2022";
-static const char aa_build_time[] = "15:48:23";
+static const char aa_git_revision[] = "369";
+static const char aa_qti_apps_version[] = "LE.UM.6.3.6.r1-11500-SDX65.0-1";
+static const char aa_qti_version[] = "Olympic.LE.1.3.1.Post-CS[11].0.0.460.1";
+static const char aa_git_commit_id[] = "cc3dcce";
+static const char aa_build_machine[] = "iot-bs7";
+static const char aa_build_date_time[] = "Mar 07 2025 09:10:49";
+static const char aa_build_date[] = "Mar 07 2025";
+static const char aa_build_time[] = "09:10:49";
 static const char *aa_fake_ver_date_time = NULL;
+static const char *aa_fake_ver_date = NULL;
+static const char *aa_fake_ver_time = NULL;
 static const struct aa_carrier_version_s aa_carrier_version[] = {
-  { "SKT", "SX1.000.00.0_39a2d82", "SX1.000.00_39a2d82", "SX1.000.00.0_39a2d82 none:39a2d82 iot-bs109 Mar 07 2022 15:48:23" },
-  { "KT", "KX1.000.00.0_39a2d82", "KX1.000.00_39a2d82", "KX1.000.00.0_39a2d82 none:39a2d82 iot-bs109 Mar 07 2022 15:48:23" },
-  { "LGU", "LX1.000.00.0_39a2d82", "LX1.000.00_39a2d82", "LX1.000.00.0_39a2d82 none:39a2d82 iot-bs109 Mar 07 2022 15:48:23" },
+  { "SKT", "SX3.000.00.0_cc3dcce", "SX3.000.00_cc3dcce", "SX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
+  { "PRIVATE", "PX3.002.00.0_cc3dcce", "PX3.002.00_cc3dcce", "PX3.002.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
+  { "KT", "KX3.000.00.0_cc3dcce", "KX3.000.00_cc3dcce", "KX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
+  { "LGU", "LX3.000.00.0_cc3dcce", "LX3.000.00_cc3dcce", "LX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
 };
 static const unsigned int aa_carrier_version_arraysz = (unsigned int)ARR_SIZE(aa_carrier_version);
+
+static const struct aa_qualified_version_s aa_qualified_version[] = {
+  { "SKT", "SX2.002.01" },
+  { "KT", "KX2.004.00" },
+  { "LGU", "LX2.005.00" },
+};
+static const unsigned int aa_qualified_version_arraysz = (unsigned int)ARR_SIZE(aa_qualified_version);
 
 
 /* Global Functions */
@@ -246,7 +256,7 @@ _global const char *aa_build_date_time_get(
 _global const char *aa_build_date_get(
   void)
 {
-  return aa_build_date;
+  return (aa_fake_ver_date)? aa_fake_ver_date:aa_build_date;
 }
 
 /************
@@ -267,7 +277,7 @@ _global const char *aa_build_date_get(
 _global const char *aa_build_time_get(
   void)
 {
-  return aa_build_time;
+  return (aa_fake_ver_time)? aa_fake_ver_time:aa_build_time;
 }
 
 /************
@@ -320,5 +330,37 @@ _global const char *aa_fake_ver_date_time_get(
   void)
 {
   return aa_fake_ver_date_time;
+}
+
+/************
+ *
+ * Name:     aa_qualified_version_get
+ *
+ * Purpose:  Gets a pointer to the build tag.
+ *
+ * Parms:    (IN) carrier - Carrier name
+ *
+ * Return:   Pointer to build tag string
+ *
+ * Abort:    None
+ *
+ * Notes:    None
+ *
+ ************/
+_global const char *aa_qualified_version_get(
+  const char * carrier)
+{
+  unsigned int i = 0;
+  WOORINET_ASSERT(carrier);
+
+  for (i=0; i<aa_qualified_version_arraysz; i++)
+  {
+    if (strcmp(carrier, aa_qualified_version[i].aa_carrier) == 0)
+    {
+      return aa_qualified_version[i].aa_version;
+    }
+  }
+
+  return NULL;
 }
 

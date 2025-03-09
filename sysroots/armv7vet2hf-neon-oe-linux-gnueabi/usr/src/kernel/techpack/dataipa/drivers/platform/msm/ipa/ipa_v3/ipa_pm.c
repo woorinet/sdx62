@@ -612,6 +612,9 @@ int ipa_pm_init(struct ipa_pm_init_params *params)
 {
 	int i, j;
 	struct clk_scaling_db *clk_scaling;
+#if IS_ENABLED(CONFIG_QCOM_VA_MINIDUMP)
+	struct ipa_minidump_data *mini_dump;
+#endif
 
 	if (params == NULL) {
 		IPA_PM_ERR("Invalid Params\n");
@@ -691,6 +694,17 @@ int ipa_pm_init(struct ipa_pm_init_params *params)
 
 	}
 	IPA_PM_DBG("initialization success");
+
+#if IS_ENABLED(CONFIG_QCOM_VA_MINIDUMP)
+	/*Adding ipa3_ctx pointer to minidump list*/
+	mini_dump = (struct ipa_minidump_data *)kzalloc(sizeof(struct ipa_minidump_data), GFP_KERNEL);
+	if (mini_dump != NULL) {
+		strlcpy(mini_dump->data.owner, "ipa_pm_ctx", sizeof(mini_dump->data.owner));
+		mini_dump->data.vaddr = (unsigned long)(ipa_pm_ctx);
+		mini_dump->data.size = sizeof(*ipa_pm_ctx);
+		list_add(&mini_dump->entry, &ipa3_ctx->minidump_list_head);
+	}
+#endif
 
 	return 0;
 }
@@ -1235,6 +1249,7 @@ int ipa_pm_handle_suspend(u32 pipe_bitmask, u32 pipe_arr_idx)
 	bool client_notified[IPA_PM_MAX_CLIENTS] = { false };
 	u32 pipe_add;
 	u32 max_pipes;
+	enum ipa_client_type type;
 
 	if (ipa_pm_ctx == NULL) {
 		IPA_PM_ERR("PM_ctx is null\n");
@@ -1251,6 +1266,12 @@ int ipa_pm_handle_suspend(u32 pipe_bitmask, u32 pipe_arr_idx)
 	mutex_lock(&ipa_pm_ctx->client_mutex);
 	for (i = 0; i < IPA_EP_PER_REG && (i + pipe_add) < max_pipes; i++) {
 		if (pipe_bitmask & (1 << i)) {
+
+			if(ipa3_ctx->wkup_enable){
+				type = ipa3_get_client_by_pipe(i + pipe_add);
+				IPAERR("%s woke up the system:\n", ipa_clients_strings[type]);
+			}
+
 			client = ipa_pm_ctx->clients_by_pipe[i + pipe_add];
 			if (client && !client_notified[client->hdl]) {
 				if (client->callback) {

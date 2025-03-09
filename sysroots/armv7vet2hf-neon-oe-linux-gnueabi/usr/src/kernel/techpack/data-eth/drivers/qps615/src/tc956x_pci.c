@@ -134,10 +134,52 @@
  *  24 Jan 2022 : 1. Set Clock control and Reset control register to default value on driver unload.
  *		  2. Version update
  *  VERSION     : 01-00-38
- *  31 Jan 2022 :  1. Version update
+ *  31 Jan 2022 : 1. Version update
  *  VERSION     : 01-00-39
- *  02 Feb 2022 :  1. Version update
+ *  02 Feb 2022 : 1. Version update
  *  VERSION     : 01-00-40
+ *  04 Feb 2022 : 1. Version update
+ *  VERSION     : 01-00-41
+ *  14 Feb 2022 : 1. Version update
+ *  VERSION     : 01-00-42
+ *  22 Feb 2022 : 1. GPIO configuration restoration supported during resume.
+ *		  2. Version update
+ *  VERSION     : 01-00-43
+ *  25 Feb 2022 : 1. Version update
+ *  VERSION     : 01-00-44
+ *  09 Mar 2022 : 1. Version update
+ *  VERSION     : 01-00-45
+ *  22 Mar 2022 : 1. Version update
+ *  VERSION     : 01-00-46
+ *  05 Apr 2022 : 1. Version update
+ *  VERSION     : 01-00-47
+ *  06 Apr 2022 : 1. Version update 
+ *		  2. Max MTU supported is 2000 bytes.
+ *  VERSION     : 01-00-48
+ *  14 Apr 2022 : 1. Version update
+ *  VERSION     : 01-00-49
+ *  25 Apr 2022 : 1. Version update
+ *  VERSION     : 01-00-50
+ *  29 Apr 2022 : 1. Module parameter added for selecting Power saving at Link down and default is disabled
+ *		  2. Version update
+ *  VERSION     : 01-00-51
+*  15 Jun 2022 : 1. Version update
+*  VERSION	   : 01-00-52
+ *  31 Aug 2022 : 1. Version update
+ *  VERSION     : 01-00-54
+ *  02 Sep 2022 : 1. 2500Base-X support for line speeds 2.5Gbps, 1Gbps, 100Mbps.
+ *		  2. Version update
+ *  VERSION     : 01-00-55
+ *  21 Oct 2022 : 1. Version update 
+ *  VERSION     : 01-00-56
+ *  09 Nov 2022 : 1. Version update 
+ *  VERSION     : 01-00-57
+ *  22 Dec 2022 : 1. Version update
+ *                2. Module parameters introduced for the control of SW reset and by default SW reset is disabled.
+ *  VERSION     : 01-00-58
+ *  09 May 2023 : 1. Version update
+ *                2. Module parameters to control SW reset (during link change) enabled by default for Port0.
+ *  VERSION     : 01-00-59
  */
 
 #include <linux/clk-provider.h>
@@ -160,6 +202,11 @@
 #ifdef TC956X_PCIE_LOGSTAT
 #include "tc956x_pcie_logstat.h"
 #endif /* #ifdef TC956X_PCIE_LOGSTAT */
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+#include <woorinet/bsudefs.h>
+#endif
+/* WOORINET STOP */
 
 #ifdef TC956X_PCIE_GEN3_SETTING
 static unsigned int pcie_link_speed = 3;
@@ -198,11 +245,15 @@ static unsigned int mac1_rxq1_rfd = 24;
 static unsigned int mac1_rxq1_rfa = 24;
 static unsigned int mac1_txq0_size = TX_QUEUE0_SIZE;
 static unsigned int mac1_txq1_size = TX_QUEUE1_SIZE;
+unsigned int mac0_link_down_macrst = ENABLE;
+unsigned int mac1_link_down_macrst = DISABLE;
 
 unsigned int mac0_en_lp_pause_frame_cnt = DISABLE;
 unsigned int mac1_en_lp_pause_frame_cnt = DISABLE;
 
-static const struct tc956x_version tc956x_drv_version = {0, 1, 0, 0, 4, 0};
+unsigned int mac_power_save_at_link_down = DISABLE;
+
+static const struct tc956x_version tc956x_drv_version = {0, 1, 0, 0, 5, 9};
 
 static int tc956xmac_pm_usage_counter; /* Device Usage Counter */
 struct mutex tc956x_pm_suspend_lock; /* This mutex is shared between all available EMAC ports. */
@@ -922,7 +973,8 @@ static void xgmac_default_data(struct plat_tc956xmacenet_data *plat)
 	if (plat->port_interface == ENABLE_RGMII_INTERFACE)
 		plat->mac_port_sel_speed = 1000;
 
-	if (plat->port_interface == ENABLE_SGMII_INTERFACE) {
+	if ((plat->port_interface == ENABLE_SGMII_INTERFACE) ||
+		(plat->port_interface == ENABLE_2500BASE_X_INTERFACE)) {
 		plat->mac_port_sel_speed = 2500;
 	}
 
@@ -986,7 +1038,8 @@ static int tc956xmac_xgmac3_default_data(struct pci_dev *pdev,
 		plat->interface = PHY_INTERFACE_MODE_RGMII;
 		plat->max_speed = 1000;
 	}
-	if (plat->port_interface == ENABLE_SGMII_INTERFACE) {
+	if ((plat->port_interface == ENABLE_SGMII_INTERFACE) ||
+		(plat->port_interface == ENABLE_2500BASE_X_INTERFACE)) {
 		plat->interface = PHY_INTERFACE_MODE_SGMII;
 		plat->max_speed = 2500;
 	}
@@ -1048,7 +1101,7 @@ static int tc956xmac_xgmac3_default_data(struct pci_dev *pdev,
 
 #endif
 
-	plat->maxmtu = XGMAC_JUMBO_LEN;
+	plat->maxmtu = MAX_SUPPORTED_MTU/*XGMAC_JUMBO_LEN*/;
 
 	/* Set default number of RX and TX queues to use */
 #ifdef TC956X
@@ -2350,6 +2403,14 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 #endif
 
 	plat->port_num = res.port_num;
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	if ((plat->port_num == RM_PF1_ID) && bs_hwid_get() == 0x43)
+	{
+		mac1_force_speed_mode = ENABLE;
+	}
+#endif
+/* WOORINET STOP */
 
 	/* User configured/Default Module parameters of TC956x*/
 	NMSGPR_INFO(&pdev->dev, "User Configured/Default Module parameters of TC956x of Port-%d\n",plat->port_num);
@@ -2372,6 +2433,8 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 		NMSGPR_INFO(&pdev->dev, "mac0_txq0_size = %d \n", mac0_txq0_size);
 		NMSGPR_INFO(&pdev->dev, "mac0_txq1_size = %d \n", mac0_txq1_size);
 		NMSGPR_INFO(&pdev->dev, "mac0_en_lp_pause_frame_cnt = %d \n", mac0_en_lp_pause_frame_cnt);
+		NMSGPR_INFO(&pdev->dev, "mac_power_save_at_link_down = %d \n", mac_power_save_at_link_down);
+		NMSGPR_INFO(&pdev->dev, "mac0_link_down_macrst = %d \n", mac0_link_down_macrst);
 	} else if (plat->port_num == RM_PF1_ID) {
 		NMSGPR_INFO(&pdev->dev, "mac1_force_speed_mode = %d \n", mac1_force_speed_mode);
 		NMSGPR_INFO(&pdev->dev, "mac1_force_config_speed = %d \n", mac1_force_config_speed);
@@ -2388,6 +2451,7 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 		NMSGPR_INFO(&pdev->dev, "mac1_txq0_size = %d \n", mac1_txq0_size);
 		NMSGPR_INFO(&pdev->dev, "mac1_txq1_size = %d \n", mac1_txq1_size);
 		NMSGPR_INFO(&pdev->dev, "mac1_en_lp_pause_frame_cnt = %d \n", mac1_en_lp_pause_frame_cnt);
+		NMSGPR_INFO(&pdev->dev, "mac1_link_down_macrst = %d \n", mac1_link_down_macrst);
 	}
 
 	if (res.port_num == RM_PF0_ID) {
@@ -2403,7 +2467,7 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 	if (res.port_num == RM_PF0_ID) {
 		/* Set the PORT0 interface mode to default, in case of invalid input */
 		if ((mac0_interface ==  ENABLE_RGMII_INTERFACE) ||
-		(mac0_interface >  ENABLE_SGMII_INTERFACE))
+		(mac0_interface >  ENABLE_2500BASE_X_INTERFACE))
 			mac0_interface = ENABLE_XFI_INTERFACE;
 
 		res.port_interface = mac0_interface;
@@ -2412,7 +2476,7 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 	if (res.port_num == RM_PF1_ID) {
 		/* Set the PORT1 interface mode to default, in case of invalid input */
 		if ((mac1_interface <  ENABLE_RGMII_INTERFACE) ||
-		(mac1_interface >  ENABLE_SGMII_INTERFACE))
+		(mac1_interface >  ENABLE_2500BASE_X_INTERFACE))
 			mac1_interface = ENABLE_SGMII_INTERFACE;
 
 		res.port_interface = mac1_interface;
@@ -2561,7 +2625,8 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 
 		ret |= ((NCLKCTRL0_MAC0TXCEN | NCLKCTRL0_MAC0ALLCLKEN | NCLKCTRL0_MAC0RXCEN));
 		/* Only if "current" port is SGMII 2.5G, configure below clocks. */
-		if (res.port_interface == ENABLE_SGMII_INTERFACE) {
+		if ((res.port_interface == ENABLE_SGMII_INTERFACE) ||
+			(res.port_interface == ENABLE_2500BASE_X_INTERFACE)) {
 			ret &= ~NCLKCTRL0_POEPLLCEN;
 			ret &= ~NCLKCTRL0_SGMPCIEN;
 			ret &= ~NCLKCTRL0_REFCLKOCEN;
@@ -2573,7 +2638,8 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 		/* Interface configuration for port0*/
 		ret = readl(res.addr + NEMAC0CTL_OFFSET);
 		ret &= ~(NEMACCTL_SP_SEL_MASK | NEMACCTL_PHY_INF_SEL_MASK);
-		if (res.port_interface == ENABLE_SGMII_INTERFACE)
+		if ((res.port_interface == ENABLE_SGMII_INTERFACE) ||
+			(res.port_interface == ENABLE_2500BASE_X_INTERFACE))
 			ret |= NEMACCTL_SP_SEL_SGMII_2500M;
 		else if ((res.port_interface == ENABLE_USXGMII_INTERFACE) ||
 			(res.port_interface == ENABLE_XFI_INTERFACE))
@@ -2605,7 +2671,8 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 
 		ret |= ((NCLKCTRL1_MAC1TXCEN | NCLKCTRL1_MAC1RXCEN |
 		NCLKCTRL1_MAC1ALLCLKEN1 | 1 << 15));
-		if (res.port_interface == ENABLE_SGMII_INTERFACE) {
+		if ((res.port_interface == ENABLE_SGMII_INTERFACE) ||
+			(res.port_interface == ENABLE_2500BASE_X_INTERFACE)) {
 			ret &= ~NCLKCTRL1_MAC1125CLKEN1;
 			ret &= ~NCLKCTRL1_MAC1312CLKEN1;
 		}
@@ -2616,7 +2683,8 @@ static int tc956xmac_pci_probe(struct pci_dev *pdev,
 		ret &= ~(NEMACCTL_SP_SEL_MASK | NEMACCTL_PHY_INF_SEL_MASK);
 		if (res.port_interface == ENABLE_RGMII_INTERFACE)
 			ret |= NEMACCTL_SP_SEL_RGMII_1000M;
-		else if (res.port_interface == ENABLE_SGMII_INTERFACE)
+		else if ((res.port_interface == ENABLE_SGMII_INTERFACE) ||
+			(res.port_interface == ENABLE_2500BASE_X_INTERFACE))
 			ret |= NEMACCTL_SP_SEL_SGMII_2500M;
 		else if ((res.port_interface == ENABLE_USXGMII_INTERFACE) ||
 			(res.port_interface == ENABLE_XFI_INTERFACE))
@@ -3031,7 +3099,8 @@ static int tc956x_pcie_resume_config(struct pci_dev *pdev)
 		ret = readl(priv->tc956x_SFR_pci_base_addr + NCLKCTRL0_OFFSET);
 
 		ret |= ((NCLKCTRL0_MAC0TXCEN | NCLKCTRL0_MAC0ALLCLKEN | NCLKCTRL0_MAC0RXCEN));
-		if (priv->port_interface == ENABLE_SGMII_INTERFACE) {
+		if ((priv->port_interface == ENABLE_SGMII_INTERFACE) ||
+			(priv->port_interface == ENABLE_2500BASE_X_INTERFACE)) {
 			/* Disable Clocks for 2.5Gbps SGMII */
 			ret &= ~NCLKCTRL0_POEPLLCEN;
 			ret &= ~NCLKCTRL0_SGMPCIEN;
@@ -3044,7 +3113,8 @@ static int tc956x_pcie_resume_config(struct pci_dev *pdev)
 		/* Interface configuration for port0*/
 		ret = readl(priv->tc956x_SFR_pci_base_addr + NEMAC0CTL_OFFSET);
 		ret &= ~(NEMACCTL_SP_SEL_MASK | NEMACCTL_PHY_INF_SEL_MASK);
-		if (priv->port_interface == ENABLE_SGMII_INTERFACE)
+		if ((priv->port_interface == ENABLE_SGMII_INTERFACE) ||
+			(priv->port_interface == ENABLE_2500BASE_X_INTERFACE))
 			ret |= NEMACCTL_SP_SEL_SGMII_2500M;
 		else if ((priv->port_interface == ENABLE_USXGMII_INTERFACE) ||
 			(priv->port_interface == ENABLE_XFI_INTERFACE))
@@ -3076,7 +3146,8 @@ static int tc956x_pcie_resume_config(struct pci_dev *pdev)
 
 		ret |= ((NCLKCTRL1_MAC1TXCEN | NCLKCTRL1_MAC1RXCEN |
 		NCLKCTRL1_MAC1ALLCLKEN1 | 1 << 15));
-		if (priv->port_interface == ENABLE_SGMII_INTERFACE) {
+		if ((priv->port_interface == ENABLE_SGMII_INTERFACE) ||
+			(priv->port_interface == ENABLE_2500BASE_X_INTERFACE)) {
 			ret &= ~NCLKCTRL1_MAC1125CLKEN1;
 			ret &= ~NCLKCTRL1_MAC1312CLKEN1;
 		}
@@ -3087,7 +3158,8 @@ static int tc956x_pcie_resume_config(struct pci_dev *pdev)
 		ret &= ~(NEMACCTL_SP_SEL_MASK | NEMACCTL_PHY_INF_SEL_MASK);
 		if (priv->port_interface == ENABLE_RGMII_INTERFACE)
 			ret |= NEMACCTL_SP_SEL_RGMII_1000M;
-		else if (priv->port_interface == ENABLE_SGMII_INTERFACE)
+		else if ((priv->port_interface == ENABLE_SGMII_INTERFACE) ||
+			(priv->port_interface == ENABLE_2500BASE_X_INTERFACE))
 			ret |= NEMACCTL_SP_SEL_SGMII_2500M;
 		else if ((priv->port_interface == ENABLE_USXGMII_INTERFACE) ||
 			(priv->port_interface == ENABLE_XFI_INTERFACE))
@@ -3208,6 +3280,11 @@ static int tc956x_pcie_resume(struct device *dev)
 		goto err;
 
 	tc956xmac_pm_set_power(priv, RESUME);
+
+	/* Restore the GPIO settings which was saved during GPIO configuration */
+	ret = tc956x_gpio_restore_configuration(priv);
+	if (ret < 0)
+		KPRINT_INFO("GPIO configuration restoration failed\n");
 
 	DBGPR_FUNC(&(pdev->dev), "%s : Port %d - Platform Resume", __func__, priv->port_num);
 	ret = tc956x_platform_resume(priv);
@@ -3490,12 +3567,12 @@ MODULE_PARM_DESC(pcie_link_speed,
 module_param(mac0_interface, uint, 0444);
 MODULE_PARM_DESC(mac0_interface,
 		 "PORT0 interface mode TC956X - default is 1,\
-		 [0: USXGMII, 1: XFI, 2: RGMII(not supported), 3: SGMII]");
+		 [0: USXGMII, 1: XFI, 2: RGMII(not supported), 3: SGMII, 4: 2500Base-X]");
 
 module_param(mac1_interface, uint, 0444);
 MODULE_PARM_DESC(mac1_interface,
 		 "PORT1 interface mode TC956X - default is 3,\
-		 [0: USXGMII(not supported), 1: XFI(not supported), 2: RGMII, 3: SGMII]");
+		 [0: USXGMII(not supported), 1: XFI(not supported), 2: RGMII, 3: SGMII, 4: 2500Base-X]");
 
 module_param(mac0_filter_phy_pause, uint, 0444);
 MODULE_PARM_DESC(mac0_filter_phy_pause,
@@ -3636,6 +3713,21 @@ module_param(mac1_force_config_speed, uint, 0444);
 MODULE_PARM_DESC(mac1_force_config_speed,
 		 "Configure MAC1 force speed - default is 3,\
 		 [0: 10G, 1: 5G, 2: 2.5G, 3: 1G, 4: 100M, 5: 10M]");
+
+module_param(mac_power_save_at_link_down, uint, 0444);
+MODULE_PARM_DESC(mac_power_save_at_link_down,
+		 "Enable Power saving during Link down - default is 0,\
+		 [0: DISABLE, 1: ENABLE]");
+
+module_param(mac0_link_down_macrst, uint, 0444);
+MODULE_PARM_DESC(mac0_link_down_macrst,
+		 "MAC0 reset for PHY Clock loss during Link Down - default is 1,\
+		 [0: DISABLE, 1: ENABLE]");
+
+module_param(mac1_link_down_macrst, uint, 0444);
+MODULE_PARM_DESC(mac1_link_down_macrst,
+		 "MAC1 reset for PHY Clock loss during Link Down - default is 0,\
+		 [0: DISABLE, 1: ENABLE]");
 
 MODULE_DESCRIPTION("TC956X PCI Express Ethernet Network Driver");
 MODULE_AUTHOR("Toshiba Electronic Devices & Storage Corporation");

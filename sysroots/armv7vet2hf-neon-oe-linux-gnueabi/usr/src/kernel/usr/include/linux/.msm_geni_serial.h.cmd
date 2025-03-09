@@ -1,0 +1,1 @@
+cmd_usr/include/linux/msm_geni_serial.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/msm_geni_serial.h usr/include/linux/msm_geni_serial.h

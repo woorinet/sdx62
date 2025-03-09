@@ -493,6 +493,9 @@ int usb_interface_id(struct usb_configuration *config,
 			config->bNumInterfaces = 0;
 		}
 		woorinet_id = bs_usb_interface_number_get(function->fi->group.cg_item.ci_name, config->cdev->desc.idVendor, config->cdev->desc.idProduct, config->bConfigurationValue, config->next_interface_id);
+#if 0
+		WOORINET_PRINTF(WOORINET_HIGH, "<%X><%d><%d><%s>",config->cdev->desc.idProduct, config->next_interface_id,woorinet_id, function->fi->group.cg_item.ci_name);
+#endif
 		if(woorinet_id == BS_USB_INVALID_INTERFACE)
 		{
 			/* fall back to use sequential interface number */
@@ -929,7 +932,7 @@ static int set_config(struct usb_composite_dev *cdev,
 		goto done;
 
 #ifdef CONFIG_QGKI_MSM_BOOT_TIME_MARKER
-	place_marker("M - USB Device is enumerated");
+	update_marker("M - USB device is enumerated");
 #endif
 	usb_gadget_set_state(gadget, USB_STATE_CONFIGURED);
 	cdev->config = c;
@@ -2025,7 +2028,7 @@ unknown:
 			buf[5] = 0x01;
 			switch (ctrl->bRequestType & USB_RECIP_MASK) {
 			case USB_RECIP_DEVICE:
-				if (w_index != 0x4 || (w_value >> 8))
+				if (w_index != 0x4 || (w_value & 0xff))
 					break;
 				buf[6] = w_index;
 				/* Number of ext compat interfaces */
@@ -2047,9 +2050,12 @@ unknown:
 				}
 				break;
 			case USB_RECIP_INTERFACE:
-				if (w_index != 0x5 || (w_value >> 8))
+				if (w_index != 0x5 || (w_value & 0xff))
 					break;
-				interface = w_value & 0xFF;
+				interface = w_value >> 8;
+				if (interface >= MAX_CONFIG_INTERFACES ||
+				    !os_desc_cfg->interface[interface])
+					break;
 				buf[6] = w_index;
 				count = count_ext_prop(os_desc_cfg,
 					interface);
@@ -2479,7 +2485,7 @@ void composite_resume(struct usb_gadget *gadget)
 	 */
 	INFO(cdev, "USB Resume end\n");
 #ifdef CONFIG_QGKI_MSM_BOOT_TIME_MARKER
-	place_marker("M - USB Device is resumed");
+	update_marker("M - USB device is resumed");
 #endif
 	if (cdev->driver->resume)
 		cdev->driver->resume(cdev);

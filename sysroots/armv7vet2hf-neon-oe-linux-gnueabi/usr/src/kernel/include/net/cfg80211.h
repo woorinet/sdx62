@@ -40,6 +40,9 @@
 /* Indicate backport support for key configuration for Beacon protection*/
 #define CFG80211_BIGTK_CONFIGURATION_SUPPORT 1
 
+/* Indicate backport support for Operation Channel validation*/
+#define CFG80211_OCV_CONFIGURATION_SUPPORT 1
+
 /* Indicate backport support for supported AKM advertisement per interface*/
 #define CFG80211_IFTYPE_AKM_SUITES_SUPPORT 1
 
@@ -462,6 +465,9 @@ ieee80211_get_sband_iftype_data(const struct ieee80211_supported_band *sband,
 
 	if (WARN_ON(iftype >= NL80211_IFTYPE_MAX))
 		return NULL;
+
+	if (iftype == NL80211_IFTYPE_AP_VLAN)
+		iftype = NL80211_IFTYPE_AP;
 
 	for (i = 0; i < sband->n_iftype_data; i++)  {
 		const struct ieee80211_sband_iftype_data *data =

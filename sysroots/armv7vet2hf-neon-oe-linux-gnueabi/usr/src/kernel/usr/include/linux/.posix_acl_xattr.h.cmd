@@ -1,0 +1,1 @@
+cmd_usr/include/linux/posix_acl_xattr.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/posix_acl_xattr.h usr/include/linux/posix_acl_xattr.h

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2018-2021, The Linux Foundation. All rights reserved.
+ *
+ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
  */
 #include "ipa_i.h"
 #include <linux/if_vlan.h>
@@ -8,7 +10,16 @@
 #include <linux/log2.h>
 
 #define IPA_ETH_RTK_MODT (32)
+/* WOORINET START */
+#ifndef WOORINET
 #define IPA_ETH_RTK_MODC (128)
+#else
+/* QTI test patch
+ * #define IPA_ETH_RTK_MODC (64)
+ */
+#define IPA_ETH_RTK_MODC (1)
+#endif
+/* WOORINET STOP */
 
 #define IPA_ETH_AQC_MODT (32)
 /*
@@ -52,6 +63,14 @@
 	((client) == IPA_CLIENT_ETHERNET2_PROD || \
 	(client) == IPA_CLIENT_ETHERNET2_CONS)
 
+#define EOGRE_STATS(y) eogre->y = \
+	ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.eogre->y
+
+#define MPLS_STATS(y) stats->y = \
+	ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.mpls->y
+
+#define MULTI_STATS(y,it) multi->tunnels[it].y = \
+	ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.multi->tunnels[it].y
 enum ipa_eth_dir {
 	IPA_ETH_RX = 0,
 	IPA_ETH_TX = 1,
@@ -171,6 +190,217 @@ static int ipa3_eth_uc_init_peripheral(bool init,
 	return result;
 }
 
+static void ipa3_uc_eogre_event_log_info_handler(
+struct IpaHwEventLogInfoData_t *uc_event_top_mmio)
+{
+	struct Ipa3HwEventInfoData_t *stats_ptr = &uc_event_top_mmio->statsInfo;
+
+	uint8_t feature;
+	if(ipa3_ctx->eogre_tunnel_feature == DEFAULT_FEATURE) {
+		feature = IPA_HW_FEATURE_EOGRE;
+	} else if(ipa3_ctx->eogre_tunnel_feature == UNTAG_FEATURE) {
+		feature = IPA_HW_FEATURE_EOGRE_UNTAG;
+	} else if(ipa3_ctx->eogre_tunnel_feature == DOUBLE_TAG_FEATURE) {
+          	feature = IPA_HW_FEATURE_MPLS;
+	} else if(ipa3_ctx->eogre_tunnel_feature == SINGLE_TAG_FEATURE) {
+			feature = IPA_HW_FEATURE_MULTI;
+	}
+
+	if ((uc_event_top_mmio->protocolMask &
+		(1 << feature)) == 0) {
+		IPAERR("EOGRE protocol missing 0x%x\n",
+				uc_event_top_mmio->protocolMask);
+		return;
+	}
+
+	if(feature == IPA_HW_FEATURE_EOGRE ||
+		feature == IPA_HW_FEATURE_EOGRE_UNTAG) {
+		if (stats_ptr->featureInfo[feature].params.size !=
+		sizeof(struct Ipa3HwStatsEOGRE)) {
+		IPAERR("eogre stats sz invalid exp=%zu is=%u\n",
+			sizeof(struct Ipa3HwStatsEOGRE),
+			stats_ptr->featureInfo[feature].params.size);
+		return;
+		}
+	}
+
+	if(feature == IPA_HW_FEATURE_MPLS) {
+		if (stats_ptr->featureInfo[feature].params.size !=
+			sizeof(struct Ipa3HwStatsMPLS)) {
+			IPAERR("eogre stats sz invalid exp=%zu is=%u\n",
+			sizeof(struct Ipa3HwStatsMPLS),
+			stats_ptr->featureInfo[feature].params.size);
+			return;
+		}
+	}
+
+	if(feature == IPA_HW_FEATURE_MULTI) {
+		if (stats_ptr->featureInfo[feature].params.size !=
+			sizeof(struct Ipa3HwStatsMultiCombined)) {
+			IPAERR("eogre stats sz invalid exp=%zu is=%u\n",
+			sizeof(struct Ipa3HwStatsMultiCombined),
+			stats_ptr->featureInfo[feature].params.size);
+			return;
+		}
+	}
+
+	ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst =
+		stats_ptr->baseAddrOffset +
+		stats_ptr->featureInfo[feature].params.offset;
+	IPAERR("EOGRE stats ofst=0x%x\n",
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst);
+
+	if(feature == IPA_HW_FEATURE_EOGRE ||
+			feature == IPA_HW_FEATURE_EOGRE_UNTAG) {
+		if (ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst +
+			sizeof(struct Ipa3HwStatsEOGRE) >=
+			ipa3_ctx->ctrl->ipa_reg_base_ofst +
+			ipahal_get_reg_n_ofst(IPA_SW_AREA_RAM_DIRECT_ACCESS_n,
+				0) + ipa3_ctx->smem_sz) {
+			IPAERR("uc_eogre_stats 0x%x outside SRAM\n",
+				ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst);
+			return;
+		}
+		ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.eogre =
+			ioremap(ipa3_ctx->ipa_wrapper_base +
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst,
+			sizeof(struct Ipa3HwStatsEOGRE));
+		if (!ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.eogre) {
+			IPAERR("fail to ioremap uc eogre stats\n");
+			return;
+		}
+
+	}
+
+	if(feature == IPA_HW_FEATURE_MULTI) {
+		if (ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst +
+				sizeof(struct Ipa3HwStatsMultiCombined) >=
+				ipa3_ctx->ctrl->ipa_reg_base_ofst +
+				ipahal_get_reg_n_ofst(IPA_SW_AREA_RAM_DIRECT_ACCESS_n, 0) +
+				ipa3_ctx->smem_sz) {
+			IPAERR("uc_eogre_stats 0x%x outside SRAM\n",
+					ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst);
+			 return;
+		}
+
+		ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.multi =
+			ioremap(ipa3_ctx->ipa_wrapper_base +
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst,
+			sizeof(struct Ipa3HwStatsMultiCombined));
+		if (!ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.multi) {
+			IPAERR("fail to ioremap uc eogre stats\n");
+			return;
+		}
+	}
+
+	if(feature == IPA_HW_FEATURE_MPLS) {
+		if (ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst +
+			sizeof(struct Ipa3HwStatsMPLS) >=
+			ipa3_ctx->ctrl->ipa_reg_base_ofst +
+			ipahal_get_reg_n_ofst(IPA_SW_AREA_RAM_DIRECT_ACCESS_n,
+				0)
+			+ ipa3_ctx->smem_sz) {
+			IPAERR("uc_eogre_stats 0x%x outside SRAM\n",
+					ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst);
+			 return;
+		}
+
+		ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.mpls =
+			ioremap(ipa3_ctx->ipa_wrapper_base +
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_ofst,
+			sizeof(struct Ipa3HwStatsMPLS));
+		if (!ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.mpls) {
+			IPAERR("fail to ioremap uc eogre stats\n");
+			return;
+		}
+	}
+
+}
+
+int ipa3_get_eogre_stats(struct Ipa3HwStatsMPLS *stats,
+		struct Ipa3HwStatsEOGRE *eogre,
+		struct Ipa3HwStatsMultiCombined *multi)
+{
+
+	if (unlikely(!ipa3_ctx)) {
+		IPAERR("IPA driver was not initialized\n");
+		return -EINVAL;
+	}
+
+	if(ipa3_ctx->eogre_tunnel_feature == UNTAG_FEATURE ||
+          ipa3_ctx->eogre_tunnel_feature == DEFAULT_FEATURE){
+        	if (!eogre || !ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.eogre) {
+		IPAERR("bad parms stats=%pK eogre_stats=%pK\n",
+			stats,
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio);
+		return -EINVAL;
+		}
+        }
+
+	if(ipa3_ctx->eogre_tunnel_feature == DOUBLE_TAG_FEATURE) {
+        	if (!stats ||
+			!ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.mpls) {
+			IPAERR("bad parms stats=%pK eogre_stats=%pK\n",
+				stats,
+				ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio);
+			return -EINVAL;
+		}
+        }
+
+	if(ipa3_ctx->eogre_tunnel_feature == SINGLE_TAG_FEATURE) {
+        	if (!stats ||
+			!ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.multi) {
+			IPAERR("bad parms stats=%pK eogre_stats=%pK\n",
+				stats,
+				ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio);
+			return -EINVAL;
+		}
+        }
+
+	IPA_ACTIVE_CLIENTS_INC_SIMPLE();
+
+	if(ipa3_ctx->eogre_tunnel_feature == UNTAG_FEATURE ||
+          	ipa3_ctx->eogre_tunnel_feature == DEFAULT_FEATURE) {
+		EOGRE_STATS(eogre_header_add_id);
+		EOGRE_STATS(eogre_header_remove_id);
+        }
+	if(ipa3_ctx->eogre_tunnel_feature == DOUBLE_TAG_FEATURE) {
+		MPLS_STATS(pppoe_mpls_header_add_id);
+		MPLS_STATS(pppoe_mpls_header_remove_id);
+		MPLS_STATS(mpls_header_add_id);
+		MPLS_STATS(mpls_header_remove_id);
+        }
+	if(ipa3_ctx->eogre_tunnel_feature == SINGLE_TAG_FEATURE) {
+		multi->eogre_header_add_id =
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.multi->\
+			eogre_header_add_id;
+		multi->eogre_header_remove_id =
+			ipa3_ctx->uc_eogre_ctx.eogre_uc_stats_mmio.multi->\
+			eogre_header_remove_id;
+		for(int i = 0; i < MAX_MULTI_TUNNEL_STATS;i++){
+			MULTI_STATS(eogre_header_add_id,i);
+			MULTI_STATS(eogre_header_remove_id,i);
+		}
+	}
+
+	IPA_ACTIVE_CLIENTS_DEC_SIMPLE();
+
+	return 0;
+}
+
+
+int ipa3_eogre_stats_init(void)
+{
+        struct ipa3_uc_hdlrs uc_wdi_cbs = { 0 };
+        uc_wdi_cbs.ipa_uc_event_log_info_hdlr =
+	                ipa3_uc_eogre_event_log_info_handler;
+
+        ipa3_uc_register_handlers(IPA_HW_FEATURE_EOGRE, &uc_wdi_cbs);
+
+        return 0;
+}
+
+
 static int ipa3_eth_config_uc(bool init,
 	u8 protocol,
 	u8 dir,
@@ -205,6 +435,7 @@ static int ipa3_eth_config_uc(bool init,
 				peripheral_ch;
 			break;
 		case IPA_HW_PROTOCOL_RTK:
+		case IPA_HW_PROTOCOL_RTK3:
 			cmd_data->SetupCh_params.RtkSetupCh_params.dir =
 				dir;
 			cmd_data->SetupCh_params.RtkSetupCh_params.gsi_ch =
@@ -236,6 +467,7 @@ static int ipa3_eth_config_uc(bool init,
 				gsi_ch;
 			break;
 		case IPA_HW_PROTOCOL_RTK:
+		case IPA_HW_PROTOCOL_RTK3:
 			cmd_data->CommonCh_params.RtkCommonCh_params.gsi_ch =
 				gsi_ch;
 			break;
@@ -339,9 +571,29 @@ static int ipa_eth_setup_rtk_gsi_channel(
 	bar_addr =
 		IPA_ETH_PCIE_SET(pipe->info.client_info.rtk.bar_addr);
 	memset(&gsi_evt_ring_props, 0, sizeof(gsi_evt_ring_props));
-	gsi_evt_ring_props.intf = GSI_EVT_CHTYPE_RTK_EV;
+	/*Setting up EV for RTK8111K*/
+	if(pipe->client_info->client_type == IPA_ETH_CLIENT_RTK8111K)
+		gsi_evt_ring_props.intf = GSI_EVT_CHTYPE_RTK3_EV;
+	else
+		gsi_evt_ring_props.intf = GSI_EVT_CHTYPE_RTK_EV;
+
 	gsi_evt_ring_props.intr = GSI_INTR_MSI;
-	gsi_evt_ring_props.re_size = GSI_EVT_RING_RE_SIZE_32B;
+
+	/*Setting up ring element size for RTK8111K, Element size = 16B for RTK CONS
+	 * and 32B for RTK PROD  */
+	if(pipe->client_info->client_type == IPA_ETH_CLIENT_RTK8111K)
+	{
+		if(pipe->dir == IPA_ETH_PIPE_DIR_TX) {
+			gsi_evt_ring_props.re_size = GSI_EVT_RING_RE_SIZE_16B;
+		}
+		else {
+			gsi_evt_ring_props.re_size = GSI_EVT_RING_RE_SIZE_32B;
+		}
+	}
+	else {
+		gsi_evt_ring_props.re_size = GSI_EVT_RING_RE_SIZE_32B;
+	}
+
 	if (pipe->dir == IPA_ETH_PIPE_DIR_TX) {
 		gsi_evt_ring_props.int_modt = IPA_ETH_RTK_MODT;
 		gsi_evt_ring_props.int_modc = IPA_ETH_RTK_MODC;
@@ -370,7 +622,13 @@ static int ipa_eth_setup_rtk_gsi_channel(
 
 	/* setup channel ring */
 	memset(&gsi_channel_props, 0, sizeof(gsi_channel_props));
-	gsi_channel_props.prot = GSI_CHAN_PROT_RTK;
+
+	/*Setting up Channel ring for RTK8111K*/
+	if(pipe->client_info->client_type == IPA_ETH_CLIENT_RTK8111K)
+		gsi_channel_props.prot = GSI_CHAN_PROT_RTK3;
+	else
+		gsi_channel_props.prot = GSI_CHAN_PROT_RTK;
+
 	if (pipe->dir == IPA_ETH_PIPE_DIR_TX)
 		gsi_channel_props.dir = GSI_CHAN_DIR_FROM_GSI;
 	else
@@ -384,7 +642,20 @@ static int ipa_eth_setup_rtk_gsi_channel(
 	} else
 		gsi_channel_props.ch_id = gsi_ep_info->ipa_gsi_chan_num;
 	gsi_channel_props.evt_ring_hdl = ep->gsi_evt_ring_hdl;
-	gsi_channel_props.re_size = GSI_CHAN_RE_SIZE_32B;
+
+	if(pipe->client_info->client_type == IPA_ETH_CLIENT_RTK8111K)
+	{
+		if(pipe->dir == IPA_ETH_PIPE_DIR_TX) {
+			gsi_channel_props.re_size = GSI_CHAN_RE_SIZE_16B;
+		}
+		else {
+			gsi_channel_props.re_size = GSI_CHAN_RE_SIZE_32B;
+		}
+	}
+	else {
+		gsi_channel_props.re_size = GSI_CHAN_RE_SIZE_32B;
+	}
+
 	gsi_channel_props.use_db_eng = GSI_CHAN_DB_MODE;
 	gsi_channel_props.db_in_bytes = 1;
 	gsi_channel_props.max_prefetch = GSI_ONE_PREFETCH_SEG;
@@ -428,6 +699,10 @@ static int ipa_eth_setup_rtk_gsi_channel(
 		(pipe->dir == IPA_ETH_PIPE_DIR_RX) ?
 		pipe->info.client_info.rtk.queue_number :
 		(queue_number == 0) ? 16 : 18;
+	if(pipe->client_info->client_type == IPA_ETH_CLIENT_RTK8111K) {
+		ch_scratch.rtk.num_queues_enabled =
+			pipe->info.client_info.rtk.num_queues_enabled;
+	}
 	ch_scratch.rtk.fix_buff_size =
 		ilog2(pipe->info.fix_buffer_size);
 	ch_scratch.rtk.rtk_buff_addr_low =
@@ -847,8 +1122,15 @@ static int ipa_eth_setup_ntn_gsi_channel(
 			(u32)((u64)(pipe->info.data_buff_list[0].iova) >> 32);
 	}
 
-	if (pipe->dir == IPA_ETH_PIPE_DIR_TX)
-		ch_scratch.ntn.ioc_mod_threshold = IPA_ETH_NTN_MODT;
+	if (pipe->dir == IPA_ETH_PIPE_DIR_TX) {
+		if (pipe->info.client_info.ntn.ioc_mod_threshold &&
+		    pipe->info.client_info.ntn.ioc_mod_threshold < len / GSI_EVT_RING_RE_SIZE_16B) {
+			ch_scratch.ntn.ioc_mod_threshold =
+				pipe->info.client_info.ntn.ioc_mod_threshold;
+		} else {
+			ch_scratch.ntn.ioc_mod_threshold = IPA_ETH_NTN_MODT;
+		}
+	}
 
 	result = gsi_write_channel_scratch(ep->gsi_chan_hdl, ch_scratch);
 	if (result != GSI_STATUS_SUCCESS) {
@@ -876,6 +1158,8 @@ static int ipa3_eth_get_prot(struct ipa_eth_client_pipe_info *pipe,
 		*prot = IPA_HW_PROTOCOL_AQC;
 		break;
 	case IPA_ETH_CLIENT_RTK8111K:
+		*prot = IPA_HW_PROTOCOL_RTK3;
+		break;
 	case IPA_ETH_CLIENT_RTK8125B:
 		*prot = IPA_HW_PROTOCOL_RTK;
 		break;
@@ -943,18 +1227,33 @@ int ipa3_eth_connect(
 	/* multiple attach support */
 	if (strnstr(net_dev->name, STR_ETH0_IFACE, strlen(net_dev->name))) {
 		result = ipa3_is_vlan_mode(IPA_VLAN_IF_ETH0, &vlan_mode);
+		if(ipa3_ctx->private_ip_forward_eth_iface == 1 && IPA_CLIENT_IS_PROD(client_type)){
+			/* Private IP forwarding enabled on ETH0*/
+			ipa3_ctx->private_ip_forward_ep_index = ep_idx;
+			IPADBG("PIF ETH0 ep:%d\n",ep_idx);
+		}
 		if (result) {
 			IPAERR("Could not determine IPA VLAN mode\n");
 			return result;
 		}
 	} else if (strnstr(net_dev->name, STR_ETH1_IFACE, strlen(net_dev->name))) {
 		result = ipa3_is_vlan_mode(IPA_VLAN_IF_ETH1, &vlan_mode);
+		if(ipa3_ctx->private_ip_forward_eth_iface == 2 && IPA_CLIENT_IS_PROD(client_type)){
+			/* Private IP forwarding enabled on ETH1*/
+			ipa3_ctx->private_ip_forward_ep_index = ep_idx;
+			IPADBG("PIF ETH1 ep:%d\n",ep_idx);
+		}
 		if (result) {
 			IPAERR("Could not determine IPA VLAN mode\n");
 			return result;
 		}
 	} else {
 		result = ipa3_is_vlan_mode(IPA_VLAN_IF_ETH, &vlan_mode);
+		if(ipa3_ctx->private_ip_forward_eth_iface && IPA_CLIENT_IS_PROD(client_type)){
+			/* Private IP forwarding enabled*/
+			ipa3_ctx->private_ip_forward_ep_index = ep_idx;
+			IPADBG("PIF ETH ep:%d\n",ep_idx);
+		}
 		if (result) {
 			IPAERR("Could not determine IPA VLAN mode\n");
 			return result;
@@ -967,7 +1266,14 @@ int ipa3_eth_connect(
 		return result;
 	}
 #endif
-
+	if (IPA_CLIENT_IS_PROD(client_type) &&
+		(ipa3_ctx->is_eth_double_vlan_mode == true ||
+		ipa3_ctx->eogre_tunnel_pppoe == true ||
+		ipa3_ctx->eogre_tunnel_tagged == true ))
+	{
+		ipa3_ctx->client_hps_eth_index = ep_idx;
+	}
+	IPADBG("Client_hps_eth_index:%d \n", ipa3_ctx->client_hps_eth_index);
 	result = ipa3_eth_get_prot(pipe, &prot);
 	if (result) {
 		IPAERR("Could not determine protocol\n");
@@ -995,6 +1301,9 @@ int ipa3_eth_connect(
 	ep->cfg.nat.nat_en = IPA_CLIENT_IS_PROD(client_type) ?
 		IPA_SRC_NAT : IPA_BYPASS_NAT;
 	ep->cfg.hdr.hdr_len = vlan_mode ? VLAN_ETH_HLEN : ETH_HLEN;
+	/* add support for double-vlan eth pdu */
+	if (vlan_mode && ipa3_ctx->is_eth_double_vlan_mode)
+		ep->cfg.hdr.hdr_len = VLAN_ETH_HLEN + VLAN_HLEN; /* 22 if double vlan */
 	ep->cfg.mode.mode = IPA_BASIC;
 	if (IPA_CLIENT_IS_CONS(client_type)) {
 		ep->cfg.aggr.aggr_en = IPA_ENABLE_AGGR;
@@ -1012,10 +1321,46 @@ int ipa3_eth_connect(
 			ep->cfg.hdr.hdr_metadata_reg_valid = false;
 		}
 	}
+
+	/* ETH PDU configuration */
+	if (ipa3_ctx->eth_pdu_ctx.eth_pdu_mode_enabled) {
+		if (ipa3_ctx->eth_pdu_ctx.eth_pdu_vlan_mode ==
+			IPA_QMI_ETH_HW_VLAN_IP_V01)
+			ep->cfg.hdr.hdr_len = VLAN_ETH_HLEN;
+		else if (ipa3_ctx->eth_pdu_ctx.eth_pdu_vlan_mode ==
+			IPA_QMI_ETH_HW_NON_VLAN_IP_V01)
+			ep->cfg.hdr.hdr_len = ETH_HLEN;
+		else
+			IPAERR("invalid vlan mode: %d\n",
+				ipa3_ctx->eth_pdu_ctx.eth_pdu_vlan_mode);
+
+		ep->skip_ep_cfg = true;
+
+		/* only need to route exception for IPA client producer */
+		if (IPA_CLIENT_IS_PROD(client_type)) {
+			/*
+			 * enable source notification status for exception packets
+			 * (i.e. QMAP commands) to be routed to modem.
+			 */
+			ep->status.status_en = true;
+			ep->status.status_ep = ipa_get_ep_mapping(IPA_CLIENT_Q6_WAN_CONS);
+			/* Enable status supression to disable sending status for
+			 * every packet.
+			 */
+			ep->status.status_pkt_suppress = true;
+
+			if (ipa3_cfg_ep_status(ep_idx, &ep->status)) {
+				IPAERR("fail to configure status of EP.\n");
+				goto cfg_ep_fail;
+			}
+		}
+	}
+
 	if (ipa3_cfg_ep(ep_idx, &ep->cfg)) {
 		IPAERR("fail to setup rx pipe cfg\n");
 		goto cfg_ep_fail;
 	}
+
 	if (IPA_CLIENT_IS_PROD(client_type))
 		ipa3_install_dflt_flt_rules(ep_idx);
 	IPADBG("client %d (ep: %d) connected\n", client_type,
@@ -1023,6 +1368,7 @@ int ipa3_eth_connect(
 
 	switch (prot) {
 	case IPA_HW_PROTOCOL_RTK:
+	case IPA_HW_PROTOCOL_RTK3:
 		result = ipa_eth_setup_rtk_gsi_channel(pipe, ep);
 		break;
 	case IPA_HW_PROTOCOL_AQC:
@@ -1075,6 +1421,7 @@ int ipa3_eth_connect(
 			}
 			break;
 		case IPA_HW_PROTOCOL_RTK:
+		case IPA_HW_PROTOCOL_RTK3:
 			if (gsi_query_msi_addr(ep->gsi_chan_hdl,
 					&pipe->info.db_pa)) {
 				result = -EFAULT;
@@ -1120,7 +1467,8 @@ int ipa3_eth_connect(
 	} else {
 		if (IPA_CLIENT_IS_PROD(client_type)) {
 			/* RX mailbox */
-			if (prot == IPA_HW_PROTOCOL_RTK) {
+			if (prot == IPA_HW_PROTOCOL_RTK || prot ==
+					IPA_HW_PROTOCOL_RTK3) {
 				pipe->info.db_pa = ipa3_ctx->ipa_wrapper_base +
 					ipahal_get_reg_base() +
 					ipahal_get_reg_mn_ofst(IPA_UC_MAILBOX_m_n,
@@ -1148,7 +1496,8 @@ int ipa3_eth_connect(
 			iounmap(db_addr);
 		} else {
 			/* TX mailbox */
-			if (prot == IPA_HW_PROTOCOL_RTK) {
+			if (prot == IPA_HW_PROTOCOL_RTK || prot ==
+					IPA_HW_PROTOCOL_RTK3) {
 				pipe->info.db_pa = ipa3_ctx->ipa_wrapper_base +
 					ipahal_get_reg_base() +
 					ipahal_get_reg_mn_ofst(IPA_UC_MAILBOX_m_n,
@@ -1222,7 +1571,7 @@ int ipa3_eth_connect(
 	id = (pipe->dir == IPA_ETH_PIPE_DIR_TX) ? 1 : 0;
 
 	/* start uC gsi dbg stats monitor */
-	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5) {
+	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5 && ipa3_ctx->ipa_hw_type != IPA_HW_v5_2) {
 		ipa3_ctx->gsi_info[prot].ch_id_info[id].ch_id
 			= ep->gsi_chan_hdl;
 		ipa3_ctx->gsi_info[prot].ch_id_info[id].dir
@@ -1257,7 +1606,7 @@ int ipa3_eth_connect(
 	ipa3_eth_save_client_mapping(pipe, client_type,
 		id, ep_idx, ep->gsi_chan_hdl);
 	if ((ipa3_ctx->ipa_hw_type == IPA_HW_v4_5) ||
-		(prot == IPA_HW_PROTOCOL_RTK)) {
+		(prot == IPA_HW_PROTOCOL_RTK || prot == IPA_HW_PROTOCOL_RTK3)) {
 		result = ipa3_eth_config_uc(true,
 			prot,
 			(pipe->dir == IPA_ETH_PIPE_DIR_TX)
@@ -1274,7 +1623,7 @@ int ipa3_eth_connect(
 
 config_uc_fail:
 	/* stop uC gsi dbg stats monitor */
-	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5) {
+	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5 && ipa3_ctx->ipa_hw_type != IPA_HW_v5_2) {
 		ipa3_ctx->gsi_info[prot].ch_id_info[id].ch_id
 			= 0xff;
 		ipa3_ctx->gsi_info[prot].ch_id_info[id].dir
@@ -1334,7 +1683,7 @@ int ipa3_eth_disconnect(
 
 	id = (pipe->dir == IPA_ETH_PIPE_DIR_TX) ? 1 : 0;
 	/* stop uC gsi dbg stats monitor */
-	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5) {
+	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5 && ipa3_ctx->ipa_hw_type != IPA_HW_v5_2) {
 		ipa3_ctx->gsi_info[prot].ch_id_info[id].ch_id
 			= 0xff;
 		ipa3_ctx->gsi_info[prot].ch_id_info[id].dir
@@ -1352,7 +1701,7 @@ int ipa3_eth_disconnect(
 	}
 
 	if ((ipa3_ctx->ipa_hw_type == IPA_HW_v4_5) ||
-		(prot == IPA_HW_PROTOCOL_RTK)) {
+		(prot == IPA_HW_PROTOCOL_RTK || prot == IPA_HW_PROTOCOL_RTK3)) {
 		result = ipa3_eth_config_uc(false,
 			prot,
 			(pipe->dir == IPA_ETH_PIPE_DIR_TX)
@@ -1384,10 +1733,11 @@ int ipa3_eth_disconnect(
 	memset(ep, 0, sizeof(struct ipa3_ep_context));
 	IPADBG("client (ep: %d) disconnected\n", ep_idx);
 
-	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5)
+	if (ipa3_ctx->ipa_hw_type >= IPA_HW_v4_5 && ipa3_ctx->ipa_hw_type != IPA_HW_v5_2)
 		ipa3_uc_debug_stats_dealloc(prot);
 	if (IPA_CLIENT_IS_PROD(client_type))
 		ipa3_delete_dflt_flt_rules(ep_idx);
+
 	/* unmap th pipe */
 	result = ipa3_smmu_map_eth_pipes(pipe, client_type, false);
 	if (result)

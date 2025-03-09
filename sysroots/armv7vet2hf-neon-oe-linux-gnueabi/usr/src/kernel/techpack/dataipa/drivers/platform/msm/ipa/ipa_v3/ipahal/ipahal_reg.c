@@ -168,6 +168,7 @@ static const char *ipareg_name_to_str[IPA_REG_MAX] = {
 	__stringify(IPA_ULSO_CFG_IP_ID_MIN_VALUE_n),
 	__stringify(IPA_ULSO_CFG_IP_ID_MAX_VALUE_n),
 	__stringify(IPA_ENDP_INIT_ULSO_CFG_n),
+	__stringify(IPA_ENDP_INIT_UCP_CFG_n),
 };
 
 static void ipareg_construct_dummy(enum ipahal_reg_name reg,
@@ -2100,6 +2101,21 @@ static void ipareg_construct_endp_init_hol_block_timer_n_v5_0(
 		IPA_ENDP_INIT_HOL_BLOCK_TIMER_n_GRAN_SEL_BMSK_V5_0);
 }
 
+static void ipareg_construct_endp_init_ucp_cfg_n_v5_0(
+	enum ipahal_reg_name reg, const void *fields, u32 *val)
+{
+	struct ipa_ep_cfg_ucp *ep_ucp =
+		(struct ipa_ep_cfg_ucp *)fields;
+
+	IPA_SETFIELD_IN_REG(*val, ep_ucp->command,
+		IPA_ENDP_INIT_UCP_CFG_n_COMMAND_SHFT_V5_0,
+		IPA_ENDP_INIT_UCP_CFG_n_COMMAND_BMSK_V5_0);
+
+	IPA_SETFIELD_IN_REG(*val, ep_ucp->enable,
+		IPA_ENDP_INIT_UCP_CFG_n_EN_SHFT_V5_0,
+		IPA_ENDP_INIT_UCP_CFG_n_EN_BMSK_V5_0);
+}
+
 static void ipareg_construct_endp_init_ctrl_n(enum ipahal_reg_name reg,
 	const void *fields, u32 *val)
 {
@@ -2215,6 +2231,10 @@ static void ipareg_construct_endp_init_mode_n_v5_0(enum ipahal_reg_name reg,
 	IPA_SETFIELD_IN_REG(*val, init_mode->ep_mode.mode,
 		IPA_ENDP_INIT_MODE_n_MODE_SHFT_V4_5,
 		IPA_ENDP_INIT_MODE_n_MODE_BMSK_V4_5);
+
+	IPA_SETFIELD_IN_REG(*val, init_mode->replication_en,
+		IPA_ENDP_INIT_MODE_n_PIPE_REPLICATION_EN_SHFT_V4_5,
+		IPA_ENDP_INIT_MODE_n_PIPE_REPLICATION_EN_BMSK_V4_5);
 
 	IPA_SETFIELD_IN_REG(*val, init_mode->dst_pipe_number,
 		IPA_ENDP_INIT_MODE_n_DEST_PIPE_INDEX_SHFT_V5_0,
@@ -4540,6 +4560,9 @@ static struct ipahal_reg_obj ipahal_reg_objs[IPA_HW_MAX][IPA_REG_MAX] = {
 	[IPA_HW_v5_0][IPA_ENDP_INIT_ULSO_CFG_n] = {
 		ipareg_construct_dummy, ipareg_parse_dummy,
 		0x0000106c, 0x80, 0, 0, 0, 0},
+	[IPA_HW_v5_0][IPA_ENDP_INIT_UCP_CFG_n] = {
+		ipareg_construct_endp_init_ucp_cfg_n_v5_0, ipareg_parse_dummy,
+		0x00001074, 0x80, 0, 15, 1, 0},
 
 	/* IPA_DEBUG */
 	[IPA_HW_v5_0][IPA_RX_HPS_CLIENTS_MIN_DEPTH_1] = { //TODO contstruct not matching previous version
@@ -5078,7 +5101,7 @@ void ipahal_get_aggr_force_close_valmask(int ep_idx,
 		IPA_AGGR_FORCE_CLOSE_AGGR_FORCE_CLOSE_PIPE_BITMAP_SHFT_V4_9;
 		bmsk =
 		IPA_AGGR_FORCE_CLOSE_AGGR_FORCE_CLOSE_PIPE_BITMAP_BMSK_V4_9;
-	} else if (ipahal_ctx->hw_type <= IPA_HW_v5_1) {
+	} else if (ipahal_ctx->hw_type <= IPA_HW_v5_2) {
 		u8 reg_idx;
 
 		shft =

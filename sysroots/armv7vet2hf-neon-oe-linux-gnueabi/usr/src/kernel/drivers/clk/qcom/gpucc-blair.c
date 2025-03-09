@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-only
 /*
  * Copyright (c) 2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #include <linux/clk-provider.h>
@@ -200,6 +201,7 @@ static const struct freq_tbl ftbl_gpu_cc_gx_gfx3d_clk_src[] = {
 	F(390000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
 	F(490000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
 	F(650000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
+	F(700000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
 	F(770000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
 	F(840000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
 	F(900000000, P_GPU_CC_PLL0_OUT_EVEN, 2, 0, 0),
@@ -439,6 +441,10 @@ static struct clk_regmap *gpu_cc_blair_clocks[] = {
 	[GPU_CC_SLEEP_CLK] = &gpu_cc_sleep_clk.clkr,
 };
 
+static const struct qcom_reset_map gpu_cc_blair_resets[] = {
+	[GPU_CC_FREQUENCY_LIMITER_IRQ_CLEAR] = { 0x153c, 0 },
+};
+
 static const struct regmap_config gpu_cc_blair_regmap_config = {
 	.reg_bits = 32,
 	.reg_stride = 4,
@@ -453,6 +459,8 @@ static const struct qcom_cc_desc gpu_cc_blair_desc = {
 	.num_clks = ARRAY_SIZE(gpu_cc_blair_clocks),
 	.clk_regulators = gpu_cc_blair_regulators,
 	.num_clk_regulators = ARRAY_SIZE(gpu_cc_blair_regulators),
+	.resets = gpu_cc_blair_resets,
+	.num_resets = ARRAY_SIZE(gpu_cc_blair_resets),
 };
 
 static const struct of_device_id gpu_cc_blair_match_table[] = {
@@ -488,6 +496,8 @@ static int gpu_cc_blair_probe(struct platform_device *pdev)
 
 	clk_lucid_pll_configure(&gpu_cc_pll0, regmap, &gpu_cc_pll0_config);
 	clk_lucid_pll_configure(&gpu_cc_pll1, regmap, &gpu_cc_pll1_config);
+
+	regmap_write(regmap, 0x1538, 0x0);
 
 	ret = qcom_cc_really_probe(pdev, &gpu_cc_blair_desc, regmap);
 	if (ret) {

@@ -34,13 +34,13 @@
 #elif defined(__KERNEL__)
 #include <linux/module.h>
 
-#define WOORINET_ERROR                       3
-#define WOORINET_HIGH                        2
-#define WOORINET_MED                         1
-#define WOORINET_LOW                         0
+#define WOORINET_ERROR                       KERN_ERR
+#define WOORINET_HIGH                        KERN_WARNING
+#define WOORINET_MED                         KERN_NOTICE
+#define WOORINET_LOW                         KERN_INFO
 
-#define WOORINET_PRINT(lvl, fmt, ...)        do { if (lvl) { printk(KERN_ERR "WOORINET %s: " fmt "\n", __func__, ##__VA_ARGS__); }} while (0)
-#define WOORINET_PRINTF(lvl, fmt, ...)       do { if (lvl) { printk(KERN_ERR "WOORINET %s: " fmt "\n", __func__, ##__VA_ARGS__); }} while (0)
+#define WOORINET_PRINT(lvl, fmt, ...)        do { if (lvl) { printk(lvl "WOORINET %s: " fmt "\n", __func__, ##__VA_ARGS__); }} while (0)
+#define WOORINET_PRINTF(lvl, fmt, ...)       do { if (lvl) { printk(lvl "WOORINET %s: " fmt "\n", __func__, ##__VA_ARGS__); }} while (0)
 
 #define WOORINET_ASSERT(x)                   BUG_ON(!(x))
 

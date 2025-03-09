@@ -5,7 +5,7 @@
 # r8125 is the Linux device driver released for Realtek 2.5Gigabit Ethernet
 # controllers with PCI-Express interface.
 #
-# Copyright(c) 2021 Realtek Semiconductor Corp. All rights reserved.
+# Copyright(c) 2022 Realtek Semiconductor Corp. All rights reserved.
 #
 # This program is free software; you can redistribute it and/or modify it
 # under the terms of the GNU General Public License as published by the Free
@@ -154,6 +154,10 @@ do { \
 #endif
 #endif
 
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0)
+#define eth_random_addr(addr) random_ether_addr(addr)
+#endif //LINUX_VERSION_CODE < KERNEL_VERSION(3,6,0)
+
 #if LINUX_VERSION_CODE < KERNEL_VERSION(3,3,0)
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(3,0,0)
 #define netdev_features_t  u32
@@ -202,7 +206,7 @@ do { \
 #define NETIF_F_RXFCS  0
 #endif
 
-#ifndef HAVE_FREE_NETDEV
+#if !defined(HAVE_FREE_NETDEV) && (LINUX_VERSION_CODE < KERNEL_VERSION(3,1,0))
 #define free_netdev(x)  kfree(x)
 #endif
 
@@ -363,12 +367,12 @@ do { \
 #define RSS_SUFFIX ""
 #endif
 
-#define RTL8125_VERSION "9.007.01" NAPI_SUFFIX DASH_SUFFIX REALWOW_SUFFIX PTP_SUFFIX RSS_SUFFIX
+#define RTL8125_VERSION "9.011.05_rx_queue0" NAPI_SUFFIX DASH_SUFFIX REALWOW_SUFFIX PTP_SUFFIX RSS_SUFFIX
 #define MODULENAME "r8125"
 #define PFX MODULENAME ": "
 
 #define GPL_CLAIM "\
-r8125  Copyright (C) 2021  Realtek NIC software team <nicfae@realtek.com> \n \
+r8125  Copyright (C) 2022 Realtek NIC software team <nicfae@realtek.com> \n \
 This program comes with ABSOLUTELY NO WARRANTY; for details, please see <http://www.gnu.org/licenses/>. \n \
 This is free software, and you are welcome to redistribute it under certain conditions; see <http://www.gnu.org/licenses/>. \n"
 
@@ -413,7 +417,7 @@ This is free software, and you are welcome to redistribute it under certain cond
 #endif
 
 #define Reserved2_data  7
-#define RX_DMA_BURST    7   /* Maximum PCI burst, '6' is 1024 */
+#define RX_DMA_BURST    7   /* Maximum PCI burst, '7' is unlimited */
 #define TX_DMA_BURST_unlimited  7
 #define TX_DMA_BURST_1024   6
 #define TX_DMA_BURST_512    5
@@ -456,17 +460,31 @@ This is free software, and you are welcome to redistribute it under certain cond
 #define RTL8125_LINK_TIMEOUT    (1 * HZ)
 #define RTL8125_ESD_TIMEOUT (2 * HZ)
 
-#define NUM_TX_DESC 1024    /* Number of Tx descriptor registers */
-#define NUM_RX_DESC 1024    /* Number of Rx descriptor registers */
+#define MAX_NUM_TX_DESC 1024    /* Maximum number of Tx descriptor registers */
+#define MAX_NUM_RX_DESC 1024    /* Maximum number of Rx descriptor registers */
 
-#define RX_BUF_SIZE 0x05F3  /* 0x05F3 = 1522bye + 1 */
-#define R8125_TX_RING_BYTES (NUM_TX_DESC * sizeof(struct TxDesc))
-#define R8125_RX_RING_BYTES (NUM_RX_DESC * sizeof(struct RxDesc))
+#define MIN_NUM_TX_DESC 256    /* Minimum number of Tx descriptor registers */
+#define MIN_NUM_RX_DESC 256    /* Minimum number of Rx descriptor registers */
+
+#define NUM_TX_DESC MAX_NUM_TX_DESC    /* Number of Tx descriptor registers */
+#define NUM_RX_DESC MAX_NUM_RX_DESC    /* Number of Rx descriptor registers */
+
+#ifdef ENABLE_DOUBLE_VLAN
+#define RX_BUF_SIZE 0x05F6  /* 0x05F6 = 1526 bytes */
+#else
+#define RX_BUF_SIZE 0x05F2  /* 0x05F2 = 1522 bytes */
+#endif
+
 #define R8125_MAX_TX_QUEUES (2)
 #define R8125_MAX_RX_QUEUES (4)
 #define R8125_MAX_QUEUES R8125_MAX_RX_QUEUES
 
 #define OCP_STD_PHY_BASE	0xa400
+
+//Channel Wait Count
+#define R8125_CHANNEL_WAIT_COUNT (20000)
+#define R8125_CHANNEL_WAIT_TIME (1)  // 1us
+#define R8125_CHANNEL_EXIT_DELAY_TIME (20)  //20us
 
 #ifdef ENABLE_LIB_SUPPORT
 #define R8125_MULTI_RX_Q(tp) 0
@@ -545,6 +563,9 @@ This is free software, and you are welcome to redistribute it under certain cond
 #define RTK_LPA_ADVERTISE_5000FULL  0x40
 #define RTK_LPA_ADVERTISE_10000FULL  0x800
 
+#define RTK_EEE_ADVERTISE_2500FULL  0x01
+#define RTK_LPA_EEE_ADVERTISE_2500FULL  0x01
+
 /* Tx NO CLOSE */
 #define MAX_TX_NO_CLOSE_DESC_PTR_V2 0x10000
 #define TX_NO_CLOSE_SW_PTR_MASK_V2 0x1FFFF
@@ -616,7 +637,11 @@ typedef int *napi_budget;
 typedef struct napi_struct *napi_ptr;
 typedef int napi_budget;
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
+#define RTL_NAPI_CONFIG(ndev, priv, function, weight)   netif_napi_add_weight(ndev, &priv->napi, function, weight)
+#else
 #define RTL_NAPI_CONFIG(ndev, priv, function, weight)   netif_napi_add(ndev, &priv->napi, function, weight)
+#endif //LINUX_VERSION_CODE >= KERNEL_VERSION(6,1,0)
 #define RTL_NAPI_QUOTA(budget, ndev)            min(budget, budget)
 #define RTL_GET_PRIV(stuct_ptr, priv_struct)        container_of(stuct_ptr, priv_struct, stuct_ptr)
 #define RTL_GET_NETDEV(priv_ptr)            struct net_device *dev = priv_ptr->dev;
@@ -1120,6 +1145,11 @@ enum RTL8125_registers {
         CounterAddrLow      = 0x10,
         CounterAddrHigh     = 0x14,
         CustomLED       = 0x18,
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+        LEDSEL0         = CustomLED,
+#endif
+/* WOORINET STOP */
         TxDescStartAddrLow  = 0x20,
         TxDescStartAddrHigh = 0x24,
         TxHDescStartAddrLow = 0x28,
@@ -1156,7 +1186,18 @@ enum RTL8125_registers {
         INT_CFG1_8125   = 0x7A,
         EPHY_RXER_NUM   = 0x7C,
         EPHYAR          = 0x80,
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+        LEDSEL2         = 0x84,
+        LEDSEL1         = 0x86,
+#endif
+/* WOORINET STOP */
         TimeInt2        = 0x8C,
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+        LEDSEL3         = 0x95,
+#endif
+/* WOORINET STOP */
         OCPDR           = 0xB0,
         MACOCP          = 0xB0,
         OCPAR           = 0xB4,
@@ -1212,6 +1253,7 @@ enum RTL8125_registers {
         IMR_V2_SET_REG_8125   = 0x0D0C,
         TDU_STA_8125       = 0x0D08,
         RDU_STA_8125       = 0x0D0A,
+        DOUBLE_VLAN_CONFIG = 0x1000,
         TX_NEW_CTRL        = 0x203E,
         TNPDS_Q1_LOW_8125  = 0x2100,
         PLA_TXQ0_IDLE_CREDIT = 0x2500,
@@ -1610,6 +1652,17 @@ enum bits {
         BIT_31 = (1 << 31)
 };
 
+#define RTL8125_CP_NUM 4
+#define RTL8125_MAX_SUPPORT_CP_LEN 110
+
+enum rtl8125_cp_status {
+        rtl8125_cp_normal = 0,
+        rtl8125_cp_short,
+        rtl8125_cp_open,
+        rtl8125_cp_mismatch,
+        rtl8125_cp_unknown
+};
+
 enum effuse {
         EFUSE_NOT_SUPPORT = 0,
         EFUSE_SUPPORT_V1,
@@ -1745,9 +1798,11 @@ struct rtl8125_tx_ring {
         u32 index;
         u32 cur_tx; /* Index into the Tx descriptor buffer of next Rx pkt. */
         u32 dirty_tx;
+        u32 num_tx_desc; /* Number of Tx descriptor registers */
         struct TxDesc *TxDescArray; /* 256-aligned Tx descriptor ring */
         dma_addr_t TxPhyAddr;
-        struct ring_info tx_skb[NUM_TX_DESC]; /* Tx data buffers */
+        u32 TxDescAllocSize;
+        struct ring_info tx_skb[MAX_NUM_TX_DESC]; /* Tx data buffers */
 
         u32 NextHwDesCloPtr;
         u32 BeginHwDesCloPtr;
@@ -1763,10 +1818,12 @@ struct rtl8125_rx_ring {
         u32 index;
         u32 cur_rx; /* Index into the Rx descriptor buffer of next Rx pkt. */
         u32 dirty_rx;
+        u32 num_rx_desc; /* Number of Rx descriptor registers */
         struct RxDesc *RxDescArray; /* 256-aligned Rx descriptor ring */
-        u64 RxDescPhyAddr[NUM_RX_DESC]; /* Rx desc physical address*/
+        u32 RxDescAllocSize;
+        u64 RxDescPhyAddr[MAX_NUM_RX_DESC]; /* Rx desc physical address*/
         dma_addr_t RxPhyAddr;
-        struct sk_buff *Rx_skbuff[NUM_RX_DESC]; /* Rx data buffers */
+        struct sk_buff *Rx_skbuff[MAX_NUM_RX_DESC]; /* Rx data buffers */
 
         u16 rdsar_reg; /* Receive Descriptor Start Address */
 };
@@ -2031,8 +2088,8 @@ struct rtl8125_private {
         //struct RxDesc *RxDescArray; /* 256-aligned Rx descriptor ring */
         //dma_addr_t TxPhyAddr;
         //dma_addr_t RxPhyAddr;
-        //struct sk_buff *Rx_skbuff[NUM_RX_DESC]; /* Rx data buffers */
-        //struct ring_info tx_skb[NUM_TX_DESC];   /* Tx data buffers */
+        //struct sk_buff *Rx_skbuff[MAX_NUM_RX_DESC]; /* Rx data buffers */
+        //struct ring_info tx_skb[MAX_NUM_TX_DESC];   /* Tx data buffers */
         unsigned rx_buf_sz;
         u16 HwSuppNumTxQueues;
         u16 HwSuppNumRxQueues;
@@ -2118,11 +2175,16 @@ struct rtl8125_private {
         u16 sw_ram_code_ver;
         u16 hw_ram_code_ver;
 
+        u8 RequireRduNonStopPatch;
+
         u8 rtk_enable_diag;
 
         u8 ShortPacketSwChecksum;
 
         u8 UseSwPaddingShortPkt;
+
+        void *ShortPacketEmptyBuffer;
+        dma_addr_t ShortPacketEmptyBufferPhy;
 
         u8 RequireAdcBiasPatch;
         u16 AdcBiasPatchIoffset;
@@ -2275,10 +2337,11 @@ struct rtl8125_private {
 #ifdef ENABLE_R8125_PROCFS
         //Procfs support
         struct proc_dir_entry *proc_dir;
+        struct proc_dir_entry *proc_dir_debug;
+        struct proc_dir_entry *proc_dir_test;
 #endif
         u8 InitRxDescType;
         u16 RxDescLength; //V1 16 Byte V2 32 Bytes
-        u32 RxDescRingLength;
 
         u8 HwSuppPtpVer;
         u8 EnablePtp;
@@ -2328,7 +2391,7 @@ rtl8125_num_lib_rx_rings(struct rtl8125_private *tp)
 {
         int count, i;
 
-        for (count = 0, i = tp->num_rx_rings; i < tp->HwSuppNumRxQueues; i++)
+        for (count = 0, i = 0; i < tp->HwSuppNumRxQueues; i++)
                 if(tp->lib_rx_ring[i].enabled)
                         count++;
 
@@ -2358,7 +2421,13 @@ rtl8125_tot_tx_rings(struct rtl8125_private *tp)
 static inline unsigned int
 rtl8125_tot_rx_rings(struct rtl8125_private *tp)
 {
-        return tp->num_rx_rings + rtl8125_num_lib_rx_rings(tp);
+        unsigned int num_lib_rx_rings;
+
+        num_lib_rx_rings = rtl8125_num_lib_rx_rings(tp);
+        if (num_lib_rx_rings > 0)
+                return num_lib_rx_rings;
+        else
+                return tp->num_rx_rings;
 }
 
 enum eetype {
@@ -2387,7 +2456,7 @@ enum mcfg {
 #define NIC_MAX_PHYS_BUF_COUNT_LSO2     (16*4)
 
 #define GTTCPHO_SHIFT                   18
-#define GTTCPHO_MAX                     0x7fU
+#define GTTCPHO_MAX                     0x70U
 #define GTPKTSIZE_MAX                   0x3ffffU
 #define TCPHO_SHIFT                     18
 #define TCPHO_MAX                       0x3ffU
@@ -2408,7 +2477,7 @@ enum mcfg {
 #define NIC_RAMCODE_VERSION_CFG_METHOD_2 (0x0b11)
 #define NIC_RAMCODE_VERSION_CFG_METHOD_3 (0x0b33)
 #define NIC_RAMCODE_VERSION_CFG_METHOD_4 (0x0b17)
-#define NIC_RAMCODE_VERSION_CFG_METHOD_5 (0x0b55)
+#define NIC_RAMCODE_VERSION_CFG_METHOD_5 (0x0b74)
 
 //hwoptimize
 #define HW_PATCH_SOC_LAN (BIT_0)
@@ -2497,6 +2566,8 @@ int rtl8125_init_ring(struct net_device *dev);
 void rtl8125_hw_set_rx_packet_filter(struct net_device *dev);
 void rtl8125_enable_hw_linkchg_interrupt(struct rtl8125_private *tp);
 int rtl8125_dump_tally_counter(struct rtl8125_private *tp, dma_addr_t paddr);
+void rtl8125_enable_napi(struct rtl8125_private *tp);
+void _rtl8125_wait_for_quiescence(struct net_device *dev);
 
 #ifndef ENABLE_LIB_SUPPORT
 static inline void rtl8125_lib_reset_prepare(struct rtl8125_private *tp) { }

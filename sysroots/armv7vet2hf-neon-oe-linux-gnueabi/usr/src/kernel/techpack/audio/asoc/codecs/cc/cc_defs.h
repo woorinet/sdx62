@@ -31,11 +31,6 @@
 /* Maximum number of interfaces */
 #define CC_NUM_IFACE_MAX 32
 
-enum {
-	CC_CDC_STATUS_UP,
-	CC_CDC_STATUS_DOWN
-};
-
 enum cc_path_types {
 	PATH_TYPE_DUMMY,
 	PATH_TYPE_CTRL,
@@ -114,10 +109,6 @@ struct cc_resp_generic {
 	uint32_t response;
 } __packed;
 
-struct cc_get_cdc_status_t {
-	uint32_t status;
-} __packed;
-
 /* OPCODE */
 #define CC_CODEC_OPCODE_GET_PLAT_INFO 0
 #define CC_CODEC_OPCODE_GET_PARAM 0x00000001
@@ -126,7 +117,6 @@ struct cc_get_cdc_status_t {
 #define CC_CODEC_OPCODE_STOP_USECASE 4
 #define CC_CODEC_OPCODE_READ_REGISTER 5
 #define CC_CODEC_OPCODE_WRITE_REGISTER 6
-#define CC_CODEC_OPCODE_GET_CODEC_STATUS 7
 
 #define CC_CODEC_RESPONSE_CMD 0x100
 #define CC_CODEC_CH_INFO 0

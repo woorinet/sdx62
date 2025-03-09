@@ -582,6 +582,11 @@ static int phylink_register_sfp(struct phylink *pl,
 		return ret;
 	}
 
+	if (!fwnode_device_is_available(ref.fwnode)) {
+		fwnode_handle_put(ref.fwnode);
+		return 0;
+	}
+
 	pl->sfp_bus = sfp_register_upstream(ref.fwnode, pl, &sfp_phylink_ops);
 	if (!pl->sfp_bus)
 		return -ENOMEM;
@@ -672,6 +677,83 @@ struct phylink *phylink_create(struct phylink_config *config,
 	return pl;
 }
 EXPORT_SYMBOL_GPL(phylink_create);
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+struct phylink *phylink_create_fixed(struct phylink_config *config,
+			       phy_interface_t iface,
+			       const struct phylink_mac_ops *ops)
+{
+	struct phylink *pl;
+	int ret;
+	const struct phy_setting *s;
+
+	pl = kzalloc(sizeof(*pl), GFP_KERNEL);
+	if (!pl)
+		return ERR_PTR(-ENOMEM);
+
+	mutex_init(&pl->state_mutex);
+	INIT_WORK(&pl->resolve, phylink_resolve);
+
+	pl->config = config;
+	if (config->type == PHYLINK_NETDEV) {
+		pl->netdev = to_net_dev(config->dev);
+	} else if (config->type == PHYLINK_DEV) {
+		pl->dev = config->dev;
+	} else {
+		kfree(pl);
+		return ERR_PTR(-EINVAL);
+	}
+
+	pl->phy_state.interface = iface;
+	pl->link_interface = iface;
+	if (iface == PHY_INTERFACE_MODE_MOCA)
+		pl->link_port = PORT_BNC;
+	else
+		pl->link_port = PORT_MII;
+	pl->link_config.interface = iface;
+	pl->link_config.pause = MLO_PAUSE_AN;
+	pl->link_config.speed = SPEED_UNKNOWN;
+	pl->link_config.duplex = DUPLEX_UNKNOWN;
+	pl->link_config.an_enabled = true;
+	pl->ops = ops;
+	__set_bit(PHYLINK_DISABLE_STOPPED, &pl->phylink_disable_state);
+	timer_setup(&pl->link_poll, phylink_fixed_poll, 0);
+
+	bitmap_fill(pl->supported, __ETHTOOL_LINK_MODE_MASK_NBITS);
+	linkmode_copy(pl->link_config.advertising, pl->supported);
+	phylink_validate(pl, pl->supported, &pl->link_config);
+
+	pl->link_an_mode = MLO_AN_FIXED;
+	pl->link_config.speed = SPEED_1000;
+	pl->link_config.duplex = DUPLEX_FULL;
+	phylink_warn(pl,"woorinet: phylink_create_fixed() hardcoded speed %d and duplex %d\n",pl->link_config.speed, pl->link_config.duplex);
+
+	bitmap_fill(pl->supported, __ETHTOOL_LINK_MODE_MASK_NBITS);
+	linkmode_copy(pl->link_config.advertising, pl->supported);
+	phylink_validate(pl, pl->supported, &pl->link_config);
+	s = phy_lookup_setting(pl->link_config.speed, pl->link_config.duplex,
+			       pl->supported, true);
+	linkmode_zero(pl->supported);
+	phylink_set(pl->supported, MII);
+	phylink_set(pl->supported, Pause);
+	phylink_set(pl->supported, Asym_Pause);
+	if (s) {
+		__set_bit(s->bit, pl->supported);
+	} else {
+		phylink_warn(pl, "fixed link %s duplex %dMbps not recognised\n",
+			     pl->link_config.duplex == DUPLEX_FULL ? "full" : "half",
+			     pl->link_config.speed);
+	}
+	linkmode_and(pl->link_config.advertising, pl->link_config.advertising,
+		     pl->supported);
+	pl->link_config.link = 1;
+	pl->link_config.an_complete = 1;
+
+	return pl;
+}
+EXPORT_SYMBOL(phylink_create_fixed);
+#endif
+/* WOORINET STOP */
 
 /**
  * phylink_destroy() - cleanup and destroy the phylink instance
@@ -1331,7 +1413,7 @@ int phylink_ethtool_set_pauseparam(struct phylink *pl,
 		return -EOPNOTSUPP;
 
 	if (!phylink_test(pl->supported, Asym_Pause) &&
-	    !pause->autoneg && pause->rx_pause != pause->tx_pause)
+	    pause->rx_pause != pause->tx_pause)
 		return -EINVAL;
 
 	config->pause &= ~(MLO_PAUSE_AN | MLO_PAUSE_TXRX_MASK);

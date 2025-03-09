@@ -1,0 +1,1 @@
+cmd_usr/include/asm/resource.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh arch/arm/include/generated/uapi/asm/resource.h usr/include/asm/resource.h

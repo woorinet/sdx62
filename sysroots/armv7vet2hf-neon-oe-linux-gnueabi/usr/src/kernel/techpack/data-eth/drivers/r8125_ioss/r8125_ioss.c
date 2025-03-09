@@ -13,6 +13,12 @@
 
 #include "r8125.h"
 #include "r8125_lib.h"
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+#include <woorinet/aaudefs.h>
+#include <woorinet/bsudefs.h>
+#endif
+/* WOORINET STOP */
 
 #define MODC_UNIT_MASK 0x3000
 #define MODC_UNIT_SHIFT 12
@@ -166,10 +172,18 @@ static int r8125_ioss_request_channel(struct ioss_channel *ch)
 				RTL8125_CH_DIR_RX : RTL8125_CH_DIR_TX;
 	struct rtl8125_ring *ring;
 
+#ifdef CONFIG_WOORINET
+	static struct rtl8125_ring *ring_allocated[IOSS_CH_DIR_MAX] = {NULL,};
+	static bool allocate_done[IOSS_CH_DIR_MAX] = {FALSE,};
+#endif
 	ioss_dev_log(ioss_ch_dev(ch), "%s, ring_size=%d, buf_size=%d, dir=%d",
 			__func__, ch->config.ring_size, ch->config.buff_size,
 			direction);
 
+#ifdef CONFIG_WOORINET
+	if (!allocate_done[ch->direction])
+	{
+#endif
 	ring = rtl8125_request_ring(ioss_ch_dev(ch)->net_dev,
 			ch->config.ring_size, ch->config.buff_size,
 			direction, RTL8125_CONTIG_BUFS, NULL);
@@ -196,6 +210,17 @@ static int r8125_ioss_request_channel(struct ioss_channel *ch)
 		}
 	}
 
+#ifdef CONFIG_WOORINET
+		ring_allocated[ch->direction]= ring;
+		allocate_done[ch->direction] = TRUE;
+	}
+	else
+	{
+		ring = ring_allocated[ch->direction];
+		printk(KERN_INFO "r8125: Woori-net Reuse %s ioss channel\n",(ch->direction == IOSS_CH_DIR_RX)? "RX":"TX");
+		rtl8125_request_wnet(ring);
+	}
+#endif
 	ch->id = ring->queue_num;
 	ch->private = ring;
 
@@ -223,12 +248,18 @@ static int r8125_ioss_release_channel(struct ioss_channel *ch)
 
 	ioss_dev_log(ioss_ch_dev(ch), "Release ring %d", ring->queue_num);
 
+#ifndef CONFIG_WOORINET
 	ioss_channel_del_desc_mem(ch, ring->desc_addr);
 
 	for (i = 0; i < ring->ring_size; i++)
 		ioss_channel_del_buff_mem(ch, ring->bufs[i].addr);
 
 	rtl8125_release_ring(ring);
+#else
+	printk(KERN_INFO "r8125: Woori-net do not release %s ioss channel\n",(ch->direction == IOSS_CH_DIR_RX)? "RX":"TX");
+	msleep_interruptible(1000);
+	rtl8125_release_wnet(ring);
+#endif
 
 	ch->id = -1;
 	ch->private = NULL;
@@ -582,6 +613,15 @@ static struct ioss_driver r8125_ioss_drv = {
 
 static int __init r8125_ioss_init(void)
 {
+/* WOORINET START */
+#ifdef CONFIG_WOORINET
+	if (bs_feature_get(BS_FEATURE_RTL8125_IPA_DIS))
+	{
+		WOORINET_PRINTF(WOORINET_HIGH, "BS_FEATURE_RTL8125_IPA_DIS is set");
+		return -ENODEV;
+	}
+#endif
+/* WOORINET STOP */
 	return ioss_pci_register_driver(&r8125_ioss_drv);
 
 }

@@ -3752,10 +3752,8 @@ skip_update:
 		dwc->maximum_speed, dwc->max_hw_supp_speed,
 		mdwc->override_usb_speed);
 	if (mdwc->override_usb_speed &&
-			mdwc->override_usb_speed <= dwc->maximum_speed) {
+			mdwc->override_usb_speed <= dwc->maximum_speed)
 		dwc->maximum_speed = mdwc->override_usb_speed;
-		dwc->gadget.max_speed = dwc->maximum_speed;
-	}
 
 	dbg_event(0xFF, "speed", dwc->maximum_speed);
 
@@ -3881,7 +3879,7 @@ static irqreturn_t msm_dwc3_pwr_irq(int irq, void *data)
 	if (mdwc->drd_state == DRD_STATE_PERIPHERAL_SUSPEND) {
 		dev_info(mdwc->dev, "USB Resume start\n");
 #ifdef CONFIG_QGKI_MSM_BOOT_TIME_MARKER
-		place_marker("M - USB device resume started");
+		update_marker("M - USB device resume started");
 #endif
 	}
 
@@ -5960,7 +5958,7 @@ static int dwc3_msm_pm_resume(struct device *dev)
 			mdwc->drd_state == DRD_STATE_PERIPHERAL_SUSPEND) {
 		dev_info(mdwc->dev, "USB Resume start\n");
 #ifdef CONFIG_QGKI_MSM_BOOT_TIME_MARKER
-		place_marker("M - USB device resume started");
+		update_marker("M - USB device resume started");
 #endif
 	}
 

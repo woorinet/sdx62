@@ -1,0 +1,1 @@
+cmd_usr/include/linux/sunrpc/debug.h := sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/scripts/headers_install.sh /home/pkang/sdx62/apps_proc/build-qti-distro-nogplv3-perf/tmp-glibc/work-shared/sdxlemur/kernel-source/include/uapi/linux/sunrpc/debug.h usr/include/linux/sunrpc/debug.h

@@ -1,0 +1,106 @@
+#include "sdxlemur-pmic-overlay.dtsi"
+
+&soc {
+
+};
+
+&qnand_1 {
+	status = "ok";
+};
+
+&sdhc_1 {
+	status = "ok";
+
+	vdd-supply = <&vreg_sd_vdd>;
+	qcom,vdd-voltage-level = <2950000 2950000>;
+	qcom,vdd-current-level = <0 800000>;
+
+	vdd-io-supply = <&vreg_vddpx_2>;
+	qcom,vdd-io-voltage-level = <1800000 2850000>;
+	qcom,vdd-io-current-level = <0 10000>;
+
+	pinctrl-names = "default", "sleep";
+	pinctrl-0 = <&sdc2_on>;
+	pinctrl-1 = <&sdc2_off>;
+
+	cd-gpios = <&tlmm 99 GPIO_ACTIVE_LOW>;
+};
+
+&soc {
+	ioss_r8125_eth0_rx: r8125_rx@eth0 {
+		qcom,dir-rx;
+		qcom,rx-filter-ip;
+
+		qcom,ring-size = <2047>; /* Cannot be a power of 2 */
+		qcom,buff-size = <4096>;
+
+		qcom,mod-count-min = <1>;
+		qcom,mod-count-max = <2>;
+		qcom,mod-usecs-min = <1>;
+		qcom,mod-usecs-max = <2>;
+	};
+
+	ioss_r8125_eth0_tx: r8125_tx@eth0 {
+		qcom,dir-tx;
+		/* QTI test patch
+		 * qcom,ring-size = <2048>;
+		 */
+		qcom,ring-size = <32768>;
+		qcom,buff-size = <4096>;
+
+		qcom,mod-count-min = <1>;
+		qcom,mod-count-max = <2>;
+		qcom,mod-usecs-min = <1>;
+		qcom,mod-usecs-max = <2>;
+	};
+};
+
+&ipa_eth_group1 {
+	qcom,iommu-dma-addr-pool = <0x80000000 0x0ef00000>;
+};
+
+&ipa_eth_group2 {
+	qcom,iommu-dma-addr-pool = <0x8ef10000 0x00f00000>;
+};
+
+&pcie0_rp {
+	#address-cells = <5>;
+	#size-cells = <0>;
+
+	realtek,rtl8125@pcie0_rp {
+		reg = <0 0 0 0 0>;
+
+		compatible = "qcom,ioss-v2-device";
+		qcom,ioss = <&ioss>;
+		qcom,ioss_instance = <0>;
+		qcom,ioss_channels =
+			<&ioss_r8125_eth0_rx>,
+			<&ioss_r8125_eth0_tx>;
+
+		/* ipa shares this group with rtl */
+		qcom,iommu-group = <&ipa_eth_group1>;
+
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		pci-ids =
+			"10ec:8125",
+			"10ec:3000";
+
+	};
+
+	pcie0_generic_ep: pcie0_generic_ep {
+		reg = <0 0 0 0 0>;
+		qcom,iommu-group = <&pcie0_generic_ep_iommu_group>;
+
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		pcie0_generic_ep_iommu_group: pcie0_generic_ep_iommu_group {
+			qcom,iommu-dma = "atomic";
+		};
+	};
+};
+
+/delete-node/ &sdx_ext_ipc;
+

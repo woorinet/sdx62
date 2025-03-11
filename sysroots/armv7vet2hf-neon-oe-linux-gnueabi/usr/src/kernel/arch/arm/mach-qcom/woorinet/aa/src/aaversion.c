@@ -26,17 +26,17 @@ static const char aa_qti_apps_version[] = "LE.UM.6.3.6.r1-11500-SDX65.0-1";
 static const char aa_qti_version[] = "Olympic.LE.1.3.1.Post-CS[11].0.0.460.1";
 static const char aa_git_commit_id[] = "cc3dcce";
 static const char aa_build_machine[] = "iot-bs7";
-static const char aa_build_date_time[] = "Mar 07 2025 09:10:49";
-static const char aa_build_date[] = "Mar 07 2025";
-static const char aa_build_time[] = "09:10:49";
+static const char aa_build_date_time[] = "Mar 10 2025 16:49:33";
+static const char aa_build_date[] = "Mar 10 2025";
+static const char aa_build_time[] = "16:49:33";
 static const char *aa_fake_ver_date_time = NULL;
 static const char *aa_fake_ver_date = NULL;
 static const char *aa_fake_ver_time = NULL;
 static const struct aa_carrier_version_s aa_carrier_version[] = {
-  { "SKT", "SX3.000.00.0_cc3dcce", "SX3.000.00_cc3dcce", "SX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
-  { "PRIVATE", "PX3.002.00.0_cc3dcce", "PX3.002.00_cc3dcce", "PX3.002.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
-  { "KT", "KX3.000.00.0_cc3dcce", "KX3.000.00_cc3dcce", "KX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
-  { "LGU", "LX3.000.00.0_cc3dcce", "LX3.000.00_cc3dcce", "LX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 07 2025 09:10:49" },
+  { "SKT", "SX3.000.00.0_cc3dcce", "SX3.000.00_cc3dcce", "SX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 10 2025 16:49:33" },
+  { "PRIVATE", "PX3.002.00.0_cc3dcce", "PX3.002.00_cc3dcce", "PX3.002.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 10 2025 16:49:33" },
+  { "KT", "KX3.000.00.0_cc3dcce", "KX3.000.00_cc3dcce", "KX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 10 2025 16:49:33" },
+  { "LGU", "LX3.000.00.0_cc3dcce", "LX3.000.00_cc3dcce", "LX3.000.00.0_cc3dcce none:cc3dcce iot-bs7 Mar 10 2025 16:49:33" },
 };
 static const unsigned int aa_carrier_version_arraysz = (unsigned int)ARR_SIZE(aa_carrier_version);
 

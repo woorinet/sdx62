@@ -45464,7 +45464,7 @@ b0e00000 R _etext
 b0e00000 r str__initcall__trace_system_name
 b0e00009 r __param_str_initcall_debug
 b0e00018 R linux_banner
-b0e000fb R linux_proc_banner
+b0e000fc R linux_proc_banner
 b0e001b0 r fops_ext
 b0e002b0 r fops
 b0e00330 r fops_ext

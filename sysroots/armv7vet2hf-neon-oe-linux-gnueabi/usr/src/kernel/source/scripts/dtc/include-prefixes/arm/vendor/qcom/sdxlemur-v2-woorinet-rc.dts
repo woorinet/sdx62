@@ -1,0 +1,13 @@
+/dts-v1/;
+
+#include "sdxlemur-v2.dtsi"
+#include "sdxlemur-woorinet.dtsi"
+#include "sdxlemur-woorinet-rc.dtsi"
+#include "sdxlemur-1024mb-cpe.dtsi"
+
+/ {
+	model = "WOORINET SDX PCIe-RC";
+	compatible = "qcom,sdxlemur-mtp",
+		"qcom,sdxlemur", "qcom,mtp";
+	qcom,board-id = <0x40010008 0x340>;
+};
